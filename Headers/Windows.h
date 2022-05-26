@@ -17,9 +17,10 @@ struct windowData
 struct gadgetData 
 {
     struct Gadget *gad;
+    VOID (*handleIDCMP)(struct gadgetData *gd, struct IntuiMessage *msg);
 };
 
-BOOL initGadget(struct gadgetData *gd, struct gadgetData *prev, WORD ID);
+BOOL initGadget(struct gadgetData *gd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD ID, VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg));
 VOID freeGadget(struct gadgetData *gd);
 BOOL openWindow(struct windowData *wd, struct screenData *sd, ULONG tag1, ...);
 VOID closeWindow(struct windowData *wd);

@@ -150,7 +150,7 @@ VOID swapBuf(struct screenData *sd)
 
         ChangeVPBitMap(&sd->s->ViewPort, sd->bm[frame], sd->dbi);
         sd->frame = frame ^ 1;
-        sd->safe = FALSE:
+        sd->safe = FALSE;
     }
 }
 

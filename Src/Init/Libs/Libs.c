@@ -1,6 +1,6 @@
 
 /*
-** GameGear engine
+** GameX engine
 ** Src > Init > Libs
 */
 
@@ -8,7 +8,7 @@
 
 #include <clib/exec_protos.h>
 
-#define KICK 39
+#include "Libs.h"
 
 struct Library
     *IntuitionBase,
@@ -35,4 +35,12 @@ BOOL openLibs()
         CloseLibrary(IntuitionBase);
     }
     return(FALSE);
+}
+
+VOID closeLibs()
+{
+    CloseLibrary(IFFParseBase);
+    CloseLibrary(DiskfontBase);
+    CloseLibrary(GfxBase);
+    CloseLibrary(IntuitionBase);
 }

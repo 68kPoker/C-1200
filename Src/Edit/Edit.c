@@ -8,11 +8,90 @@
 
 #include <exec/memory.h>
 #include <intuition/intuition.h>
+#include <libraries/iffparse.h>
 
 #include <clib/exec_protos.h>
+#include <clib/iffparse_protos.h>
 
 #include "Edit.h"
 #include "Bobs.h"
+#include "IFF.h"
+
+#define ID_GAME MAKE_ID('G','A','M','E')
+#define ID_MAP  MAKE_ID('M','A','P',' ')
+#define ID_BODY MAKE_ID('B','O','D','Y')
+
+UBYTE mapTiles[] = "Back, Wall, Floor, KeyBox, KeyStone, SwitchBox, SwitchStone, Sand, Mud, Water, Fire, Hero, BombBox, Skull, Cherry";
+
+BOOL loadBoard(struct editData *ed, STRPTR name)
+{
+    struct IFFHandle *iff;
+
+    if (iff = openIFF(name, IFFF_READ))
+    {
+        if (PropChunk(iff, ID_GAME, ID_MAP) == 0)
+        {
+            if (StopChunk(iff, ID_GAME, ID_BODY) == 0)
+            {
+                if (ParseIFF(iff, IFFPARSE_SCAN) == 0)
+                {
+                    struct ContextNode *cn;
+
+                    if (cn = CurrentChunk(iff))
+                    {                    
+                        BYTE *buffer;
+                        LONG size = cn->cn_Size;
+                        if (buffer = AllocVec(size, MEMF_PUBLIC))
+                        {
+                            if (ReadChunkBytes(iff, ed->board, size) == size)
+                            {
+                                closeIFF(iff);
+                                return(TRUE);
+                            }
+                        }                    
+                    }                    
+                }
+            }
+        }
+        closeIFF(iff);
+    }
+    return(FALSE);
+}
+
+BOOL saveBoard(struct editData *ed, STRPTR name)
+{
+    struct IFFHandle *iff;
+
+    if (iff = openIFF(name, IFFF_WRITE))
+    {
+        if (PushChunk(iff, ID_GAME, ID_FORM, IFFSIZE_UNKNOWN) == 0)
+        {
+            if (PushChunk(iff, ID_GAME, ID_MAP, sizeof(mapTiles)) == 0)
+            {
+                if (WriteChunkBytes(iff, mapTiles, sizeof(mapTiles)) == sizeof(mapTiles))
+                {
+                    if (PopChunk(iff) == 0)
+                    {
+                        if (PushChunk(iff, ID_GAME, ID_BODY) == 0)
+                        {
+                            LONG size = WIDTH * HEIGHT * sizeof(*ed->board);
+                            if (WriteChunkBytes(iff, ed->board, size) == size)
+                            {
+                                if (PopChunk(iff) == 0)
+                                {
+                                    closeIFF(iff);
+                                    return(TRUE);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        closeIFF(iff);
+    }
+    return(FALSE);
+}
 
 VOID updateSelect(struct selectData *sd, BOOL redraw)
 {

@@ -13,7 +13,7 @@
 #include "Windows.h"
 #include "Screen.h"
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *joyIO)
+VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *joyIO, struct InputEvent *joyIE, struct BitMap *gfx)
 {
     ULONG sigMasks[EID_COUNT] =
     {
@@ -52,8 +52,18 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *jo
             struct gadgetData *active = wd->activeGadget;
 
             while ((!done) && (msg = (struct IntuiMessage *)GetMsg(wd->w->UserPort)))
-            {            
-                if (active)
+            {   
+                if (msg->Class == IDCMP_GADGETDOWN)         
+                {
+                    struct Gadget *gad = (struct Gadget *)msg->IAddress;
+                    struct gadgetData *gd = (struct gadgetData *)gad->UserData;
+
+                    if (gd->handleIDCMP)
+                    {
+                        gd->handle(gd, msg);
+                    }
+                }
+                else if (active)
                 {
                     active->handleIDCMP(active, msg);
                 }

@@ -4,6 +4,16 @@
 ** Src > Init > IFF
 */
 
+#include <dos/dos.h>
+#include <libraries/iffparse.h>
+#include <exec/memory.h>
+
+#include <clib/dos_protos.h>
+#include <clib/iffparse_protos.h>
+#include <clib/exec_protos.h>
+
+#include "IFF.h"
+
 struct IFFHandle *openIFF(STRPTR name, LONG mode)
 {
     struct IFFHandle *iff;

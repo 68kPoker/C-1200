@@ -13,8 +13,7 @@
 #include <clib/iffparse_protos.h>
 #include <clib/graphics_protos.h>
 
-#define RGB(c) ((c)|((c)<<8)|((c)<<16)|((c)<<24))
-#define RowBytes(w) ((((w) + 15) >> 4) << 1)
+#include "ILBM.h"
 
 BOOL scanILBM(struct IFFHandle *iff)
 {

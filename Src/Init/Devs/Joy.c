@@ -1,7 +1,7 @@
 
 /*
 ** GameX engine
-** Src > Init > Devs > Joy
+** Src > Init > Devs
 */
 
 #include <devices/gameport.h>

@@ -1,7 +1,7 @@
 
 /*
 ** GameX engine
-** Src > Init > Devs > Joy
+** Src > Init > Devs
 */
 
 #ifndef JOY_H

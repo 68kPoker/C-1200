@@ -12,6 +12,8 @@
 struct windowData
 {
     struct Window *w;
+    struct gadgetData *activeGadget;
+    BOOL done;
 };
 
 struct gadgetData 

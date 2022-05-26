@@ -107,12 +107,15 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         ed->board[(y * WIDTH) + x] = ed->sd->selected;
 
         drawTile(ed->tileGfx, ed->sd->selected, ed->wd, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+
+        ed->wd->activeGad = (struct gadgetData *)ed;
     }
     else if (msg->Class == IDCMP_MOUSEBUTTONS)
     {
         if (msg->Code == IECODE_LBUTTON|IECODE_UP_PREFIX)
         {
             ed->paint = FALSE;
+            ed->wd->activeGad = NULL;
         }
     }
     else if (msg->Class == IDCMP_MOUSEMOVE)

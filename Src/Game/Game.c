@@ -108,6 +108,7 @@ int main(int argc, char **argv)
                                                 	{
                                                 		static struct editData ed;
                                                 		static struct selectData seld;
+                                                        static struct gadgetData md; /* Menu button */
                                                 		
                                                 		ed.sd = &seld;
                                                 		
@@ -115,11 +116,15 @@ int main(int argc, char **argv)
                                                 		{
 	                                                		if (initEdit(&ed, &seld.gd, 0, 16, &wd, gfx, board))
 	                                                		{
-    	                                            			AddGList(wd.w, seld.gd.gad, -1, 2, NULL);
-			                                                    eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
+                                                                if (initGadget(&md, &ed.gd, 288, 0, 32, 16, GID_MENU, hitMenu))
+                                                                {
+    	                                            			    AddGList(wd.w, seld.gd.gad, -1, -1, NULL);
+			                                                        eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
 		                                                    
-		    	                                                RemoveGList(wd.w, seld.gd.gad, 2);
+		    	                                                    RemoveGList(wd.w, seld.gd.gad, -1);
 		                                                    
+                                                                    freeGadget(&md);
+                                                                }
 		        	                                            freeGadget((struct gadgetData *)&ed);
 		        	                                        }    
 		        	                                        freeGadget((struct gadgetData *)&seld);

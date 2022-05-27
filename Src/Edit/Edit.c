@@ -5,6 +5,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <exec/memory.h>
 #include <intuition/intuition.h>
@@ -12,6 +13,7 @@
 
 #include <clib/exec_protos.h>
 #include <clib/iffparse_protos.h>
+#include <clib/graphics_protos.h>
 
 #include "Edit.h"
 #include "Bobs.h"
@@ -134,6 +136,150 @@ VOID hitSelect(struct selectData *sd, struct IntuiMessage *msg)
         sd->selected = ((msg->MouseY >> 4) * sd->width) + (msg->MouseX >> 4);
 
         updateSelect(sd, FALSE);
+    }
+}
+
+LONG hitButton(struct gadgetData *gd, struct IntuiMessage *msg)
+{
+    WORD action = AID_NONE;
+    struct menuData *md = (struct menuData *)msg->IDCMPWindow->UserData;
+
+    if (msg->Class == IDCMP_GADGETDOWN)
+    {        
+        select (gd->gad->GadgetID)
+        {
+            case GID_LOAD:
+                md->action = AID_LOAD;
+                md->wd.done = TRUE;
+                break;
+            case GID_CANCEL:
+                md->action = AID_CANCEL;
+                md->wd.done = TRUE;
+                break;
+            case GID_SAVE:
+                md->action = AID_SAVE;
+                md->wd.done = TRUE;
+                break;
+            case GID_PREV:
+                md->action = AID_PREV;
+                md->level--;
+                /* Decrease and redraw level number */
+                break;
+            case GID_NEXT:
+                md->action = AID_NEXT;
+                md->level++;
+                /* Increase and redraw level number */
+                break;
+            default:
+        }
+    }
+    return(action);
+}
+
+VOID drawNumber(struct RastPort *rp, WORD number)
+{
+    UBYTE text[6];
+    WORD posx = 0, posy = 0;
+
+    sprintf(text, "%5d", number);
+
+    SetAPen(rp, WHITE);
+    SetDrMd(rp, JAM2);
+    Move(rp, posx, posy + rp->Font->tf_Baseline);
+    Text(rp, text, strlen(text));
+}
+
+LONG handleMenu(struct menuData *md)
+{
+    struct IntuiMessage *msg;
+    LONG action = AID_NONE;
+
+    while (!md->wd.done)
+    {
+        WaitPort(md->wd.w->UserPort);
+
+        while ((!md->wd.done) && (msg = (struct IntuiMessage *)GetMsg(md->wd.w->UserPort)))
+        {
+            if (msg->Class == IDCMP_GADGETDOWN)
+            {
+                struct Gadget *gad = (struct Gadget *)msg->IAddress;
+                struct gadgetData *gd = (struct gadgetData *)gad->UserData;
+
+                if (gd->handleIDCMP)
+                {
+                    action = gd->handleIDCMP(gd, msg);    
+
+                    switch (action)
+                    {
+                        case AID_PREV:                                                
+                        case AID_NEXT:
+                            drawNumber(md->wd.w->RPort, md->level);
+                            break;                    
+                    }              
+                }
+            }
+            else if (msg->Class == IDCMP_RAWKEY)
+            {
+                if (msg->Code == ESC_KEY)
+                {
+                    md->wd.done = TRUE;
+                }
+            }
+            ReplyMsg((struct Message *)msg);
+        }
+    }
+    return(action);
+}
+
+VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
+{
+    if (msg->Class == IDCMP_GADGETDOWN)
+    {
+        struct Requester req;
+        struct windowData *wd = (struct windowData *)msg->IDCMPWindow->UserData;
+        static struct menuData rwd;
+               
+        /* Open menu */
+        InitRequester(&req);
+        Request(wd->w, &req);
+
+        if (openWindow((struct windowData *)&rwd, (struct screenData *)wd->w->WScreen->UserData, 
+            WA_Left,        0,
+            WA_Top,         16,
+            WA_Width,       160,
+            WA_Height,      128,
+            WA_Activate,    TRUE,
+            WA_IDCMP,       IDCMP_GADGETDOWN|IDCMP_RAWKEY,
+            TAG_DONE))
+        {
+            static struct gadgetData loadGad, cancelGad, saveGad, prevGad, nextGad;
+
+            if (initGadget(&loadGad, NULL, 0, 0, 64, 16, GID_LOAD, hitButton))
+            {
+                if (initGadget(&cancelGad, &loadGad, 80, 0, 64, 16, GID_CANCEL, hitButton))
+                {
+                    if (initGadget(&prevGad, &cancelGad, 0, 32, 64, 16, GID_PREV, hitButton))
+                    {
+                        if (initGadget(&nextGad, &prevGad, 80, 32, 64, 16, GID_NEXT, hitButton))
+                        {
+                            if (initGadget(&saveGad, &nextGad, 80, 64, 64, 16, GID_SAVE, hitButton))
+                            {
+                                AddGList(rwd.wd.w, loadGad.gad, -1, -1, NULL);                                
+                                handleMenu(&rwd);
+                                RemoveGList(rwd.wd.w, loadGad.gad, -1);
+                                freeGadget(&saveGad);
+                            }
+                            freeGadget(&nextGad);
+                        }
+                        freeGadget(&prevGad);
+                    }
+                    freeGadget(&cancelGad);
+                }
+                freeGadget(&loadGad);
+            }
+            closeWindow(&rwd);
+        }
+        EndRequest(msg->IDCPWindow, &req);
     }
 }
 

@@ -38,8 +38,19 @@ enum Tiles
 enum ID
 {
     GID_SELECT,
-    GID_BOARD
+    GID_BOARD,
+    GID_MENU
 };
+
+enum Actions
+{
+    AID_NONE,
+    AID_LOAD,
+    AID_CANCEL,
+    AID_SAVE,
+    AID_PREV,
+    AID_NEXT
+}
 
 /* Tile selection */
 struct selectData
@@ -61,6 +72,13 @@ struct editData
     struct windowData *wd;
     WORD *board; /* Array of tiles */
     struct BitMap *tileGfx;
+};
+
+struct menuData
+{
+    struct windowData wd;
+    WORD action;
+    WORD level;
 };
 
 BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct BitMap *gfx);

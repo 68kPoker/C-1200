@@ -1,6 +1,10 @@
 
-#include <dos/dos.h>
+#include <stdio.h>
 
+#include <dos/dos.h>
+#include <intuition/intuition.h>
+
+#include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
 
 #include "Libs.h"
@@ -15,7 +19,12 @@
 struct TextAttr ta = 
 {
     "centurion.font", 9, FS_NORMAL, FPF_DISKFONT|FPF_DESIGNED
-}
+};
+
+struct Rectangle dclip =
+{
+    0, 0, 319, 255
+};
 
 VOID prepBitMap(struct BitMap *bm, struct BitMap *gfx)
 {
@@ -66,7 +75,7 @@ int main(int argc, char **argv)
                                                 WA_Top, 0,
                                                 WA_Width, sd.s->Width,
                                                 WA_Height, sd.s->Height,
-                                                WA_IDCMP, IDCMP_CLOSEWINDOW,
+                                                WA_IDCMP, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE,                                                
                                                 TAG_DONE))
                                             {
                                                 struct IOStdReq *joyIO;
@@ -77,6 +86,8 @@ int main(int argc, char **argv)
                                                     eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
                                                     closeJoy(joyIO);
                                                 }
+                                                else
+                                                    printf("Couldn't obtain joystick!\n");
                                                 closeWindow(&wd);
                                             }
                                             remDBuf(&sd);

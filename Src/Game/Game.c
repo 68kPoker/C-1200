@@ -83,6 +83,10 @@ int main(int argc, char **argv)
 
                                 if (openScreen(&sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
                                 {
+                                    static struct gfxData rpData = { gfx };
+
+                                    sd.s->RastPort.RP_User = (APTR)&rpData;
+
                                     if (addCop(&sd, "Warehouse", 0, 0, NULL))
                                     {
                                         if (addDBuf(&sd))

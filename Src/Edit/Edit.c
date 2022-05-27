@@ -189,6 +189,14 @@ VOID drawNumber(struct RastPort *rp, WORD number)
     Text(rp, text, strlen(text));
 }
 
+VOID drawMenu(struct menuData *md)
+{
+    struct gfxData *rpData = (struct gfxData *)md->wd.w->WScreen->RastPort.RP_User;
+    WORD menuX = 0, menuY = 16;
+
+    BltBitMapRastPort(rpData->gfx, menuX, menuY, md->wd.w->RPort, 0, 0, md->wd.w->Width, md->wd.w->Height, 0xc0);
+}
+
 LONG handleMenu(struct menuData *md)
 {
     struct IntuiMessage *msg;
@@ -264,6 +272,7 @@ VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
                         {
                             if (initGadget(&saveGad, &nextGad, 80, 64, 64, 16, GID_SAVE, hitButton))
                             {
+                                drawMenu(&rwd);
                                 AddGList(rwd.wd.w, loadGad.gad, -1, -1, NULL);                                
                                 handleMenu(&rwd);
                                 RemoveGList(rwd.wd.w, loadGad.gad, -1);

@@ -22,6 +22,12 @@ struct gadgetData
     LONG (*handleIDCMP)(struct gadgetData *gd, struct IntuiMessage *msg);
 };
 
+/* Attached to RastPort */
+struct gfxData
+{
+    struct BitMap *gfx;
+};
+
 BOOL initGadget(struct gadgetData *gd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD ID, VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg));
 VOID freeGadget(struct gadgetData *gd);
 BOOL openWindow(struct windowData *wd, struct screenData *sd, ULONG tag1, ...);

@@ -51,7 +51,7 @@ VOID clearCon(struct IOStdReq *io)
     DoIO((struct IORequest *)io);
 }
 
-VOID setTrig(struct IORequest *io)
+VOID setTrig(struct IOStdReq *io)
 {
     struct GamePortTrigger gpt;
 
@@ -93,7 +93,7 @@ struct IOStdReq *openJoy(struct InputEvent *ie)
 
     if (mp = CreateMsgPort())
     {
-        if (io = (struct IOStdReq *)CreateIORequest(mp, sizeof(*io))
+        if (io = (struct IOStdReq *)CreateIORequest(mp, sizeof(*io)))
         {
             if (OpenDevice("gameport.device", 1, (struct IORequest *)io, 0) == 0)
             {

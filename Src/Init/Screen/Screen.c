@@ -44,7 +44,7 @@ BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectan
             SA_Quiet,       TRUE,
             SA_Exclusive,   TRUE,
             SA_BackFill,    LAYERS_NOBACKFILL,
-            TAG_DONE
+            TAG_DONE))
         {
             sd->bm[0] = bm[0];
             sd->bm[1] = bm[1];
@@ -68,7 +68,7 @@ BOOL addCop(struct screenData *sd, STRPTR name, BYTE pri, WORD coplen, VOID (*ad
     struct Interrupt *is = &sd->is;
     struct copperData *cd = &sd->cd;
 
-    is->is_Code = myCop;
+    is->is_Code = (VOID(*)())myCop;
     is->is_Data = (APTR)cd;
     is->is_Node.ln_Name = name;
     is->is_Node.ln_Pri = pri;

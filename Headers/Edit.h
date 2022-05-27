@@ -9,6 +9,8 @@
 
 #include "Windows.h"
 
+#include <exec/types.h>
+
 #define WIDTH 20
 #define HEIGHT 16
 
@@ -29,12 +31,14 @@ enum Tiles
     TID_HERO,
     TID_BOMB_BOX,
     TID_SKULL,
-    TID_CHERRY
+    TID_CHERRY,
+    TID_COUNT
 };
 
 enum ID
 {
-    GID_SELECT
+    GID_SELECT,
+    GID_BOARD
 };
 
 /* Tile selection */
@@ -42,7 +46,7 @@ struct selectData
 {
     struct gadgetData gd;
     WORD width, height; /* In tiles */
-    WORD selected, prevSelect; /* Selected tile */
+    WORD selected, prevSelected; /* Selected tile */
     struct windowData *wd;
     struct BitMap *tileGfx; /* Tile graphics */
 };
@@ -57,7 +61,7 @@ struct editData
     struct windowData *wd;
     WORD *board; /* Array of tiles */
     struct BitMap *tileGfx;
-}
+};
 
 BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct BitMap *gfx);
 

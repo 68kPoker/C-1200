@@ -11,6 +11,7 @@
 #include <clib/intuition_protos.h>
 
 #include "Windows.h"
+#include "Screen.h"
 
 BOOL initGadget(struct gadgetData *gd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD ID, VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))
 {

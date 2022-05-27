@@ -16,6 +16,7 @@
 #include "Edit.h"
 #include "Bobs.h"
 #include "IFF.h"
+#include "Windows.h"
 
 #define ID_GAME MAKE_ID('G','A','M','E')
 #define ID_MAP  MAKE_ID('M','A','P',' ')
@@ -72,9 +73,9 @@ BOOL saveBoard(struct editData *ed, STRPTR name)
                 {
                     if (PopChunk(iff) == 0)
                     {
-                        if (PushChunk(iff, ID_GAME, ID_BODY) == 0)
+                    	LONG size = WIDTH * HEIGHT * sizeof(*ed->board);
+                        if (PushChunk(iff, ID_GAME, ID_BODY, size) == 0)
                         {
-                            LONG size = WIDTH * HEIGHT * sizeof(*ed->board);
                             if (WriteChunkBytes(iff, ed->board, size) == size)
                             {
                                 if (PopChunk(iff) == 0)
@@ -103,7 +104,7 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         {
             for (col = 0; col < sd->width; col++)
             {
-                drawTile(sd->tileGfx, (row * sd->width) + col, sd->wd, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
+                drawTile(sd->tileGfx, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
             }
         }
     }
@@ -130,7 +131,7 @@ VOID hitSelect(struct selectData *sd, struct IntuiMessage *msg)
 
 BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct BitMap *gfx)
 {
-    if (initGadget(&sd->gd, prev, left, top, width << 4, height << 4, GID_SELECT, hitSelect))
+    if (initGadget(&sd->gd, prev, left, top, width << 4, height << 4, GID_SELECT, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitSelect))
     {
         sd->width = width;
         sd->height = height;
@@ -173,7 +174,7 @@ WORD *allocBoard()
 
 VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
 {
-    WORD x = msg->MouseX >> 4, y = msg->MouseY >> 4; /* Note: Substract gadget pos if needed */
+    WORD x = (msg->MouseX - ed->gd.gad->LeftEdge) >> 4, y = (msg->MouseY - ed->gd.gad->TopEdge) >> 4; /* Note: Substract gadget pos if needed */
 
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
     {
@@ -185,13 +186,13 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         ed->paint = TRUE;
         ed->board[(y * WIDTH) + x] = ed->sd->selected;
 
-        drawTile(ed->tileGfx, ed->sd->selected, ed->wd, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+        drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
 
         ed->wd->activeGad = (struct gadgetData *)ed;
     }
     else if (msg->Class == IDCMP_MOUSEBUTTONS)
     {
-        if (msg->Code == IECODE_LBUTTON|IECODE_UP_PREFIX)
+        if (msg->Code == (IECODE_LBUTTON|IECODE_UP_PREFIX))
         {
             ed->paint = FALSE;
             ed->wd->activeGad = NULL;
@@ -203,20 +204,20 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         {
             ed->board[(y * WIDTH) + x] = ed->sd->selected;
 
-            drawTile(ed->tileGfx, ed->sd->selected, ed->wd, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+            drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
         }
     }
 }
 
 BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct BitMap *gfx, WORD *board)
 {
-    if (initGadget(&ed->gd, prev, left, top, WIDTH << 4, HEIGHT << 4, GID_BOARD, hitEdit))
+    if (initGadget(&ed->gd, prev, left, top, WIDTH << 4, HEIGHT << 4, GID_BOARD, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitEdit))
     {
         ed->wd = wd;
         ed->tileGfx = gfx;
         ed->board = board;
-        ed->paint = FALSE;
+        ed->paint = FALSE;        
         return(TRUE);
     }
-    return(FLASE);
+    return(FALSE);
 }

@@ -12,7 +12,7 @@
 struct windowData
 {
     struct Window *w;
-    struct gadgetData *activeGadget;
+    struct gadgetData *activeGad;
     BOOL done;
 };
 

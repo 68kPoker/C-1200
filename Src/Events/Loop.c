@@ -43,26 +43,26 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *jo
         if (result & sigMasks[EID_SAFE_TO_CHANGE])
         {
             /* Swap buffers here */
-            swapBuf(sd);
+            /* swapBuf(sd); */
         }
 
         if (result & sigMasks[EID_USER])
         {
             struct IntuiMessage *msg;
-            struct gadgetData *active = wd->activeGadget;
+            struct gadgetData *active = wd->activeGad;
 
             while ((!done) && (msg = (struct IntuiMessage *)GetMsg(wd->w->UserPort)))
-            {   
-                if (msg->Class == IDCMP_GADGETDOWN)         
-                {
-                    struct Gadget *gad = (struct Gadget *)msg->IAddress;
-                    struct gadgetData *gd = (struct gadgetData *)gad->UserData;
-
-                    if (gd->handleIDCMP)
-                    {
-                        gd->handle(gd, msg);
-                    }
-                }
+            {            
+            	if (msg->Class == IDCMP_GADGETDOWN)
+            	{
+            		struct Gadget *gad = (struct Gadget *)msg->IAddress;
+            		struct gadgetData *gd = (struct gadgetData *)gad->UserData;
+            		
+            		if (gd->handleIDCMP)
+            		{
+            			gd->handleIDCMP(gd, msg);
+            		}	
+            	}	
                 else if (active)
                 {
                     active->handleIDCMP(active, msg);

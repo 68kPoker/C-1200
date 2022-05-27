@@ -13,6 +13,7 @@
 #include <clib/iffparse_protos.h>
 #include <clib/graphics_protos.h>
 
+#include "IFF.h"
 #include "ILBM.h"
 
 BOOL scanILBM(struct IFFHandle *iff)

@@ -3,6 +3,7 @@
 
 #include <dos/dos.h>
 #include <intuition/intuition.h>
+#include <libraries/iffparse.h>
 
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
@@ -12,6 +13,7 @@
 #include "ILBM.h"
 #include "Screen.h"
 #include "Joy.h"
+#include "Bobs.h"
 #include "Windows.h"
 #include "Edit.h"
 #include "Loop.h"
@@ -29,11 +31,28 @@ struct Rectangle dclip =
 VOID prepBitMap(struct BitMap *bm, struct BitMap *gfx)
 {
     struct RastPort rp;
+    WORD x, y;
 
     InitRastPort(&rp);
     rp.BitMap = bm;
-
-    SetRast(&rp, 0);
+    
+    for (y = 0; y < HEIGHT; y++)
+    {
+    	for (x = 0; x < WIDTH; x++)
+    	{
+    		WORD tile;
+    		
+    		if (x == 0 || x == (WIDTH - 1) || y == 0 || y == (HEIGHT - 1))
+    		{
+    			tile = TID_WALL;
+    		}
+    		else
+    		{	
+    			tile = TID_FLOOR;
+    		}	
+			drawTile(gfx, tile, &rp, x << 4, y << 4);
+		}	    		
+	}
 }
 
 int main(int argc, char **argv)
@@ -60,7 +79,7 @@ int main(int argc, char **argv)
                                 static struct screenData sd;
 
                                 prepBitMap(bm[0], gfx);
-                                prepBitMap(bm[1), gfx);
+                                prepBitMap(bm[1], gfx);
 
                                 if (openScreen(&sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
                                 {
@@ -71,19 +90,42 @@ int main(int argc, char **argv)
                                             static struct windowData wd;
 
                                             if (openWindow(&wd, &sd, 
-                                                WA_Left, 0, 
-                                                WA_Top, 0,
-                                                WA_Width, sd.s->Width,
-                                                WA_Height, sd.s->Height,
-                                                WA_IDCMP, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE,                                                
+                                                WA_Left, 		0, 
+                                                WA_Top, 		0,
+                                                WA_Width, 		sd.s->Width,
+                                                WA_Height, 		sd.s->Height,
+                                                WA_Activate,	TRUE,
+                                                WA_IDCMP, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS,
                                                 TAG_DONE))
                                             {
                                                 struct IOStdReq *joyIO;
                                                 static struct InputEvent joyIE;
-
+                                                WORD *board;
+                                                
                                                 if (joyIO = openJoy(&joyIE))
                                                 {
-                                                    eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
+                                                	if (board = allocBoard())
+                                                	{
+                                                		static struct editData ed;
+                                                		static struct selectData seld;
+                                                		
+                                                		ed.sd = &seld;
+                                                		
+                                                		if (initSelect(&seld, NULL, 0, 0, TID_COUNT, 1, 1, &wd, gfx))
+                                                		{
+	                                                		if (initEdit(&ed, &seld.gd, 0, 16, &wd, gfx, board))
+	                                                		{
+    	                                            			AddGList(wd.w, seld.gd.gad, -1, 2, NULL);
+			                                                    eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
+		                                                    
+		    	                                                RemoveGList(wd.w, seld.gd.gad, 2);
+		                                                    
+		        	                                            freeGadget((struct gadgetData *)&ed);
+		        	                                        }    
+		        	                                        freeGadget((struct gadgetData *)&seld);
+		                                                }    
+		                                                FreeVec(board);
+		                                            }    
                                                     closeJoy(joyIO);
                                                 }
                                                 else

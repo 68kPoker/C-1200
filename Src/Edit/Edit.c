@@ -96,10 +96,9 @@ BOOL saveBoard(struct editData *ed, STRPTR name)
 
 VOID updateSelect(struct selectData *sd, BOOL redraw)
 {
+    WORD row, col;
     if (redraw)
-    {
-        WORD row, col;
-
+    {        
         for (row = 0; row < sd->height; row++)
         {
             for (col = 0; col < sd->width; col++)
@@ -107,13 +106,22 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
                 drawTile(sd->tileGfx, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
             }
         }
+        col = sd->selected % sd->width;
+        row = sd->selected / sd->width;
+        drawFrame(sd->tileGfx, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
     }
 
     if (sd->selected != sd->prevSelected)
     {
         /* Select tile */
+        
+        col = sd->prevSelected % sd->width;
+        row = sd->prevSelected / sd->width;
+        drawTile(sd->tileGfx, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
 
-        printf("%d selected.\n", sd->selected);
+        col = sd->selected % sd->width;
+        row = sd->selected / sd->width;
+        drawFrame(sd->tileGfx, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
 
         sd->prevSelected = sd->selected;
     }
@@ -189,6 +197,8 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
         drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
 
+        ed->cursX = x;
+        ed->cursY = y;        
         ed->wd->activeGad = (struct gadgetData *)ed;
     }
     else if (msg->Class == IDCMP_MOUSEBUTTONS)
@@ -197,6 +207,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         {
             ed->paint = FALSE;
             ed->wd->activeGad = NULL;
+            drawTile(ed->tileGfx, ed->board[(ed->cursY * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
         }
     }
     else if (msg->Class == IDCMP_MOUSEMOVE)

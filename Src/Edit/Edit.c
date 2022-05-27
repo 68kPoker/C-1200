@@ -187,6 +187,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         ed->board[(y * WIDTH) + x] = ed->sd->selected;
 
         drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+        drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
 
         ed->wd->activeGad = (struct gadgetData *)ed;
     }
@@ -200,11 +201,18 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     }
     else if (msg->Class == IDCMP_MOUSEMOVE)
     {
-        if (ed->paint)
+        if (ed->cursX != x || ed->cursY != y)
         {
-            ed->board[(y * WIDTH) + x] = ed->sd->selected;
+            if (ed->paint)
+            {
+                ed->board[(y * WIDTH) + x] = ed->sd->selected;
 
-            drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+                drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));                
+            }        
+            drawTile(ed->tileGfx, ed->board[(ed->cursY * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+            ed->cursX = x;
+            ed->cursY = y;                        
+            drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
         }
     }
 }
@@ -217,6 +225,7 @@ BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top,
         ed->tileGfx = gfx;
         ed->board = board;
         ed->paint = FALSE;        
+        ed->cursX = ed->cursY = 0;
         return(TRUE);
     }
     return(FALSE);

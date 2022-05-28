@@ -18,6 +18,19 @@
 #include "Edit.h"
 #include "Loop.h"
 
+#define MENU_LEFT 288
+#define MENU_TOP  0
+#define MENU_WIDTH 32
+#define MENU_HEIGHT 16
+
+struct boardWindowData
+{
+    struct windowData wd;
+    struct editData ed; /* Board-editing gadget */
+    struct selectData seld; /* Tile-selection gadget */
+    struct gadgetData menud; /* Menu button */
+};
+
 struct TextAttr ta = 
 {
     "centurion.font", 9, FS_NORMAL, FPF_DISKFONT|FPF_DESIGNED
@@ -27,6 +40,122 @@ struct Rectangle dclip =
 {
     0, 0, 319, 255
 };
+
+/* Do the setup (graphics, screen, joystick, window) */
+
+BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
+{
+    struct IFFHandle *iff;
+    struct windowData *wd = &sd->wd;
+    const WORD width = 320, height = 256;
+
+    /* Read graphics */
+    if (iff = openIFF(name, IFFF_READ))
+    {
+        if (scanILBM(iff))
+        {
+            ULONG *pal;
+            if (pal = getPal(iff))
+            {
+                struct BitMap *gfx;
+                if (gfx = unpackBitMap(iff))
+                {
+                    struct BitMap *bm[2];
+
+                    if (bm[0] = AllocBitMap(width, height, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
+                    {
+                        if (bm[1] = AllocBitMap(width, height, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
+                        {                
+                            /* Draw initial screen contents before opening */
+                            prepBitMap(bm[0], gfx);                         
+
+                            if (openScreen(sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
+                            {                            
+                                sd->gfx = gfx;
+                                if (addCop(sd, "Warehouse", 0, 0, NULL))
+                                {
+                                    if (addDBuf(sd))
+                                    {                                    
+                                        if (openWindow(wd, sd, 
+                                            WA_Left, 		0, 
+                                            WA_Top, 		0,
+                                            WA_Width, 		sd->s->Width,
+                                            WA_Height, 		sd->s->Height,
+                                            WA_Activate,	TRUE,
+                                            WA_IDCMP,       idcmp,
+                                            TAG_DONE))
+                                        {                                                                                        
+                                            if (sd->joyIO = openJoy(&sd->joyIE))
+                                            {
+                                                FreeVec(pal);
+                                                closeIFF(iff);
+                                                return(TRUE);
+                                            }
+                                            closeWindow(wd);
+                                        }
+                                        remDBuf(sd);
+                                    }
+                                    remCop(sd);
+                                }
+                                closeScreen(sd);
+                            }
+                            FreeBitMap(bm[1]);
+                        }
+                        FreeBitMap(bm[0]);
+                    }
+                    FreeBitMap(gfx);
+                }
+                FreeVec(pal);
+            }
+        }
+        closeIFF(iff);
+    }
+    return(FALSE);
+}
+
+VOID cleanup(struct screenData *sd)
+{
+    struct windowData *wd = &sd->wd;
+
+    closeJoy(sd->joyIO);
+    closeWindow(wd);
+    remDBuf(sd);
+    remCop(sd);
+    closeScreen(sd);
+    FreeBitMap(sd->bm[1]);
+    FreeBitMap(sd->bm[0]);
+    FreeBitMap(sd->gfx);
+}
+
+/* Prepare main GUI */
+
+BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
+{
+    bwd->ed.sd = &bwd->seld; /* Link gadgets */
+
+    if (initSelect(&bwd->seld, NULL, 0, 0, TID_COUNT, 1, 1, &bwd->wd, sd->gfx))
+    {
+        if (initEdit(&bwd->ed, &bwd->seld.gd, 0, 16, &bwd->wd, sd->gfx, board))
+        {
+            if (initGadget(&bwd->menud, &bwd->ed.gd, MENU_LEFT, MENU_TOP, MENU_WIDTH, MENU_HEIGHT, GID_MENU, hitMenu))
+            {
+                AddGList(bwd->wd.w, bwd->seld.gd.gad, -1, -1, NULL);
+                return(TRUE);
+            }
+            freeGadget((struct gadgetData *)&bwd->ed);
+        }    
+        freeGadget((struct gadgetData *)&bwd->seld);
+    }    
+    return(FALSE);
+}
+
+VOID cleanGUI(struct boardWindowData *bwd)
+{
+    RemoveGList(bwd->wd.w, bwd->seld.gd.gad, -1);
+    freeGadget(&bwd->menud);
+    freeGadget((struct gadgetData *)&bwd->ed);
+    freeGadget((struct gadgetData *)&bwd->seld);
+}
 
 VOID prepBitMap(struct BitMap *bm, struct BitMap *gfx)
 {
@@ -59,107 +188,27 @@ int main(int argc, char **argv)
 {
     if (openLibs())
     {
-        struct IFFHandle *iff;
-        if (iff = openIFF("Data/Graphics.iff", IFFF_READ))
+        static struct screenData sd;
+        static struct boardWindowData bwd; /* Custom window */
+
+        sd.wd = &bwd.wd;
+
+        if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS))
         {
-            if (scanILBM(iff))
-            {
-                ULONG *pal;
-                if (pal = getPal(iff))
+            WoRD *board;
+
+            /* Allocate space for board */
+            if (board = allocBoard())
+            {   
+                if (prepGUI(&sd, &bwd, board))
                 {
-                    struct BitMap *gfx;
-                    if (gfx = unpackBitMap(iff))
-                    {
-                        struct BitMap *bm[2];
-
-                        if (bm[0] = AllocBitMap(320, 256, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
-                        {
-                            if (bm[1] = AllocBitMap(320, 256, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
-                            {
-                                static struct screenData sd;
-
-                                prepBitMap(bm[0], gfx);
-                                prepBitMap(bm[1], gfx);
-
-                                if (openScreen(&sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
-                                {
-                                    static struct gfxData rpData = { gfx };
-
-                                    sd.s->RastPort.RP_User = (APTR)&rpData;
-
-                                    if (addCop(&sd, "Warehouse", 0, 0, NULL))
-                                    {
-                                        if (addDBuf(&sd))
-                                        {
-                                            static struct windowData wd;
-
-                                            if (openWindow(&wd, &sd, 
-                                                WA_Left, 		0, 
-                                                WA_Top, 		0,
-                                                WA_Width, 		sd.s->Width,
-                                                WA_Height, 		sd.s->Height,
-                                                WA_Activate,	TRUE,
-                                                WA_IDCMP, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS,
-                                                TAG_DONE))
-                                            {
-                                                struct IOStdReq *joyIO;
-                                                static struct InputEvent joyIE;
-                                                WORD *board;
-                                                
-                                                if (joyIO = openJoy(&joyIE))
-                                                {
-                                                	if (board = allocBoard())
-                                                	{
-                                                		static struct editData ed;
-                                                		static struct selectData seld;
-                                                        static struct gadgetData md; /* Menu button */
-                                                		
-                                                		ed.sd = &seld;
-                                                		
-                                                		if (initSelect(&seld, NULL, 0, 0, TID_COUNT, 1, 1, &wd, gfx))
-                                                		{
-	                                                		if (initEdit(&ed, &seld.gd, 0, 16, &wd, gfx, board))
-	                                                		{
-                                                                if (initGadget(&md, &ed.gd, 288, 0, 32, 16, GID_MENU, hitMenu))
-                                                                {
-    	                                            			    AddGList(wd.w, seld.gd.gad, -1, -1, NULL);
-			                                                        eventLoop(&sd, &wd, joyIO, &joyIE, gfx);
-		                                                    
-		    	                                                    RemoveGList(wd.w, seld.gd.gad, -1);
-		                                                    
-                                                                    freeGadget(&md);
-                                                                }
-		        	                                            freeGadget((struct gadgetData *)&ed);
-		        	                                        }    
-		        	                                        freeGadget((struct gadgetData *)&seld);
-		                                                }    
-		                                                FreeVec(board);
-		                                            }    
-                                                    closeJoy(joyIO);
-                                                }
-                                                else
-                                                    printf("Couldn't obtain joystick!\n");
-                                                closeWindow(&wd);
-                                            }
-                                            remDBuf(&sd);
-                                        }
-                                        remCop(&sd);
-                                    }                                    
-                                    closeScreen(&sd);
-                                }
-                                FreeBitMap(bm[1]);
-                            }
-                            FreeBitMap(bm[0]);
-                        }
-                        FreeBitMap(gfx);
-                    }
-                    FreeVec(pal);
+                    eventLoop(&sd, &bwd.wd);
+                    cleanGUI(&bwd);
                 }
+                FreeVec(board);
             }
-            closeIFF(iff);
+            cleanup(&sd);
         }
-        else
-            printf("Couldn't open graphics file!\n");
         closeLibs();
     }
     else

@@ -13,8 +13,14 @@
 #include "Windows.h"
 #include "Screen.h"
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *joyIO, struct InputEvent *joyIE, struct BitMap *gfx)
+VOID eventLoop(struct screenData *sd, struct windowData *wd)
 {
+    struct IOStdReq *joyIO = sd->joyIO;
+    struct InputEvent *joyIE = sd->joyIE;
+    struct RastPort *rp = &sd->s->RastPort;
+    struct gfxData *gfxData = (struct gfxData *)rp->RP_User;
+    struct BitMap *gfx = gfxData->gfx;
+
     ULONG sigMasks[EID_COUNT] =
     {
         1L << sd->safePort->mp_SigBit,

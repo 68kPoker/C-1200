@@ -1,0 +1,38 @@
+
+src = Game/Game.c Init/Libs/Libs.c Init/IFF/IFF.c Init/IFF/ILBM.c \
+	Init/Screen/Screen.c Init/Windows/Windows.c Init/Devs/Joy.c \
+	Edit/Edit.c Bobs/Bobs.c Events/Loop.c
+
+inc = /Headers/
+
+obj = $(src:*.c:%1.o)
+
+exe = Game.exe
+
+$(exe): $(obj)
+	dcc %(right) -o %(left)
+
+$(obj): $(src)
+	dcc %(right) -c -I/Headers -o %(left)
+
+# Headers
+
+Game/Game.o: $(inc)Game.h $(inc)IFF.h $(inc)ILBM.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h $(inc)Windows.h $(inc)Edit.h $(inc)Loop.h
+
+Init/Libs/Libs.o: $(inc)Libs.h
+
+Init/IFF/IFF.o: $(inc)IFF.h
+
+Init/IFF/ILBM.o: $(inc)IFF.h $(inc)ILBM.h
+
+Init/Screen/Screen.o: $(inc)Screen.h
+
+Init/Windows/Windows.o: $(inc)Windows.h
+
+Init/Devs/Joy.o: $(inc)Joy.h
+
+Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h
+
+Bobs/Bobs.o: $(inc)Bobs.h
+
+Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h

@@ -20,6 +20,8 @@
 #include "IFF.h"
 #include "Windows.h"
 
+#include "debug.h"
+
 #define ID_GAME MAKE_ID('G','A','M','E')
 #define ID_MAP  MAKE_ID('M','A','P',' ')
 #define ID_BODY MAKE_ID('B','O','D','Y')
@@ -183,6 +185,8 @@ VOID drawNumber(struct RastPort *rp, WORD number)
 
     sprintf(text, "%5d", number);
 
+    D(bug("Drawing number (%d)...\n", number));
+
     SetAPen(rp, WHITE);
     SetDrMd(rp, JAM2);
     Move(rp, posx, posy + rp->Font->tf_Baseline);
@@ -191,10 +195,12 @@ VOID drawNumber(struct RastPort *rp, WORD number)
 
 VOID drawMenu(struct menuData *md)
 {
-    struct gfxData *rpData = (struct gfxData *)md->wd.w->WScreen->RastPort.RP_User;
+    struct screenData *sd = (struct screenData *)md->wd.w->WScreen->UserData;    
     WORD menuX = 0, menuY = 16;
 
-    BltBitMapRastPort(rpData->gfx, menuX, menuY, md->wd.w->RPort, 0, 0, md->wd.w->Width, md->wd.w->Height, 0xc0);
+    D(bug("Drawing menu...\n"));
+
+    BltBitMapRastPort(sd->gfx, menuX, menuY, md->wd.w->RPort, 0, 0, md->wd.w->Width, md->wd.w->Height, 0xc0);
 }
 
 LONG handleMenu(struct menuData *md)
@@ -216,6 +222,7 @@ LONG handleMenu(struct menuData *md)
                 if (gd->handleIDCMP)
                 {
                     action = gd->handleIDCMP(gd, msg);    
+                    D(bug("Menu action %d selected.\n", action));
 
                     switch (action)
                     {

@@ -20,6 +20,6 @@ enum Events
     EID_COUNT
 };
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd, struct IOStdReq *joyIO, struct InputEvent *joyIE, struct BitMap *gfx);;
+VOID eventLoop(struct screenData *sd, struct windowData *wd);
 
 #endif /* LOOP_H */

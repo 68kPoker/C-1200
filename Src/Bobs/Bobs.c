@@ -9,12 +9,13 @@
 #include <clib/graphics_protos.h>
 
 #include "Bobs.h"
+#include "Blitter.h"
 
 #define WHITE 2
 
 VOID drawTile(struct BitMap *bm, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos)
 {
-    BltBitMapRastPort(bm, (tile % TILES) << 4, (tile / TILES) << 4, rp, xpos, ypos, 16, 16, 0xc0);
+    bltBitMapRastPort(bm, (tile % TILES) << 4, (tile / TILES) << 4, rp, xpos, ypos, 16, 16, 0xc0);
 }
 
 VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y)

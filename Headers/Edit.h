@@ -42,6 +42,15 @@ enum ID
     GID_MENU
 };
 
+enum
+{
+	GID_LOAD,
+	GID_CANCEL,
+	GID_SAVE,
+	GID_PREV,
+	GID_NEXT
+};	
+
 enum Actions
 {
     AID_NONE,
@@ -50,7 +59,7 @@ enum Actions
     AID_SAVE,
     AID_PREV,
     AID_NEXT
-}
+};
 
 /* Tile selection */
 struct selectData
@@ -74,6 +83,12 @@ struct editData
     struct BitMap *tileGfx;
 };
 
+struct menuGadgetData
+{
+	struct gadgetData gd;
+	struct editData *ed;
+};
+
 struct menuData
 {
     struct windowData wd;
@@ -86,5 +101,7 @@ BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD 
 BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct BitMap *gfx, WORD *board);
 
 WORD *allocBoard();
+
+VOID hitMenu(struct menuGadgetData *mgd, struct IntuiMessage *msg);
 
 #endif /* EDIT_H */

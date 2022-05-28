@@ -1,7 +1,7 @@
 
 src = Game/Game.c Init/Libs/Libs.c Init/IFF/IFF.c Init/IFF/ILBM.c \
 	Init/Screen/Screen.c Init/Windows/Windows.c Init/Devs/Joy.c \
-	Edit/Edit.c Bobs/Bobs.c Events/Loop.c
+	Edit/Edit.c Bobs/Bobs.c Events/Loop.c Bobs/Blitter.c
 
 inc = /Headers/
 
@@ -17,7 +17,7 @@ $(obj): $(src)
 
 # Headers
 
-Game/Game.o: $(inc)Game.h $(inc)IFF.h $(inc)ILBM.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h $(inc)Windows.h $(inc)Edit.h $(inc)Loop.h
+Game/Game.o: $(inc)Game.h $(inc)IFF.h $(inc)ILBM.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h $(inc)Windows.h $(inc)Edit.h $(inc)Loop.h $(inc)Blitter.h
 
 Init/Libs/Libs.o: $(inc)Libs.h
 
@@ -31,8 +31,11 @@ Init/Windows/Windows.o: $(inc)Windows.h
 
 Init/Devs/Joy.o: $(inc)Joy.h
 
-Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h
+Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h $(inc)Blitter.h
 
-Bobs/Bobs.o: $(inc)Bobs.h
+Bobs/Bobs.o: $(inc)Bobs.h $(inc)Blitter.h
 
 Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h
+
+Bobs/Blitter.o: $(inc)Blitter.h
+

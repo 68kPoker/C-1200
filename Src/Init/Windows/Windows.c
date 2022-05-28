@@ -9,6 +9,7 @@
 
 #include <clib/exec_protos.h>
 #include <clib/intuition_protos.h>
+#include <clib/utility_protos.h>
 
 #include "Windows.h"
 #include "Screen.h"
@@ -48,16 +49,18 @@ VOID freeGadget(struct gadgetData *gd)
 BOOL openWindow(struct windowData *wd, struct screenData *sd, ULONG tag1, ...)
 {
     struct Window *w;
-
+    
     if (wd->w = w = OpenWindowTags(NULL,
         WA_CustomScreen,    sd->s,
         WA_Borderless,      TRUE,
         WA_RMBTrap,         TRUE,
-        WA_SimpleRefresh,   TRUE,
+        WA_SimpleRefresh,   GetTagData(WA_SimpleRefresh, TRUE, (struct TagItem *)&tag1),
         WA_BackFill,        LAYERS_NOBACKFILL,
         WA_ReportMouse,     TRUE,
         TAG_MORE,           &tag1))
     {
+    	wd->done = FALSE;
+    
         w->UserData = (APTR)wd;
 
         return(TRUE);

@@ -20,6 +20,6 @@ enum Events
     EID_COUNT
 };
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd);
+VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board);
 
 #endif /* LOOP_H */

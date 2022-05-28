@@ -13,13 +13,13 @@
 #include "Windows.h"
 #include "Screen.h"
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd)
+VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
 {
     struct IOStdReq *joyIO = sd->joyIO;
-    struct InputEvent *joyIE = sd->joyIE;
+    struct InputEvent *joyIE = &sd->joyIE;
     struct RastPort *rp = &sd->s->RastPort;
     struct gfxData *gfxData = (struct gfxData *)rp->RP_User;
-    struct BitMap *gfx = gfxData->gfx;
+    struct BitMap *gfx = sd->gfx;
 
     ULONG sigMasks[EID_COUNT] =
     {
@@ -54,11 +54,22 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd)
 
         if (result & sigMasks[EID_USER])
         {
-            struct IntuiMessage *msg;
+            struct IntuiMessage *msg, msgCopy;
             struct gadgetData *active = wd->activeGad;
 
             while ((!done) && (msg = (struct IntuiMessage *)GetMsg(wd->w->UserPort)))
             {            
+            	msgCopy = *msg;
+            	ReplyMsg((struct Message *)msg);
+            	
+            	msg = &msgCopy;
+            	
+            	if (msg->Class == IDCMP_REFRESHWINDOW)
+            	{
+            		BeginRefresh(wd->w);
+            		prepBitMap(board, wd->w->RPort, sd->gfx);
+            		EndRefresh(wd->w, TRUE);
+            	}           
             	if (msg->Class == IDCMP_GADGETDOWN)
             	{
             		struct Gadget *gad = (struct Gadget *)msg->IAddress;
@@ -69,9 +80,9 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd)
             			gd->handleIDCMP(gd, msg);
             		}	
             	}	
-                else if (active)
+                else if (wd->activeGad)
                 {
-                    active->handleIDCMP(active, msg);
+                    wd->activeGad->handleIDCMP(active, msg);
                 }
                 else if (msg->Class == IDCMP_RAWKEY)
                 {
@@ -81,7 +92,6 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd)
                     }
                 }
                 done = wd->done;
-                ReplyMsg((struct Message *)msg);
             }
 
             if (done)

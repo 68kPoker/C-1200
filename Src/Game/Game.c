@@ -17,18 +17,21 @@
 #include "Windows.h"
 #include "Edit.h"
 #include "Loop.h"
+#include "Blitter.h"
 
-#define MENU_LEFT 288
+#define MENU_LEFT 0
 #define MENU_TOP  0
-#define MENU_WIDTH 32
+#define MENU_WIDTH 64
 #define MENU_HEIGHT 16
+
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx);
 
 struct boardWindowData
 {
     struct windowData wd;
     struct editData ed; /* Board-editing gadget */
     struct selectData seld; /* Tile-selection gadget */
-    struct gadgetData menud; /* Menu button */
+    struct menuGadgetData menud; /* Menu button */
 };
 
 struct TextAttr ta = 
@@ -46,7 +49,7 @@ struct Rectangle dclip =
 BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
 {
     struct IFFHandle *iff;
-    struct windowData *wd = &sd->wd;
+    struct windowData *wd = sd->wd;
     const WORD width = 320, height = 256;
 
     /* Read graphics */
@@ -66,8 +69,13 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                     {
                         if (bm[1] = AllocBitMap(width, height, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
                         {                
+                        	struct RastPort rp;
+                        	
+                        	InitRastPort(&rp);
+                        	rp.BitMap = bm[0];
+                        	
                             /* Draw initial screen contents before opening */
-                            prepBitMap(bm[0], gfx);                         
+                            prepBitMap(NULL, &rp, gfx);                         
 
                             if (openScreen(sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
                             {                            
@@ -115,7 +123,7 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
 
 VOID cleanup(struct screenData *sd)
 {
-    struct windowData *wd = &sd->wd;
+    struct windowData *wd = sd->wd;
 
     closeJoy(sd->joyIO);
     closeWindow(wd);
@@ -133,12 +141,14 @@ BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
 {
     bwd->ed.sd = &bwd->seld; /* Link gadgets */
 
-    if (initSelect(&bwd->seld, NULL, 0, 0, TID_COUNT, 1, 1, &bwd->wd, sd->gfx))
+    if (initSelect(&bwd->seld, NULL, 64, 0, TID_COUNT, 1, 1, &bwd->wd, sd->gfx))
     {
         if (initEdit(&bwd->ed, &bwd->seld.gd, 0, 16, &bwd->wd, sd->gfx, board))
         {
-            if (initGadget(&bwd->menud, &bwd->ed.gd, MENU_LEFT, MENU_TOP, MENU_WIDTH, MENU_HEIGHT, GID_MENU, hitMenu))
+            if (initGadget(&bwd->menud.gd, &bwd->ed.gd, MENU_LEFT, MENU_TOP, MENU_WIDTH, MENU_HEIGHT, GID_MENU, (APTR)hitMenu))
             {
+            	bwd->menud.ed = &bwd->ed;
+            	
                 AddGList(bwd->wd.w, bwd->seld.gd.gad, -1, -1, NULL);
                 return(TRUE);
             }
@@ -152,36 +162,35 @@ BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
 VOID cleanGUI(struct boardWindowData *bwd)
 {
     RemoveGList(bwd->wd.w, bwd->seld.gd.gad, -1);
-    freeGadget(&bwd->menud);
+    freeGadget(&bwd->menud.gd);
     freeGadget((struct gadgetData *)&bwd->ed);
     freeGadget((struct gadgetData *)&bwd->seld);
 }
 
-VOID prepBitMap(struct BitMap *bm, struct BitMap *gfx)
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx)
 {
-    struct RastPort rp;
     WORD x, y;
 
-    InitRastPort(&rp);
-    rp.BitMap = bm;
-    
-    for (y = 0; y < HEIGHT; y++)
+    for (y = 1; y < HEIGHT; y++)
     {
     	for (x = 0; x < WIDTH; x++)
     	{
     		WORD tile;
     		
-    		if (x == 0 || x == (WIDTH - 1) || y == 0 || y == (HEIGHT - 1))
+			if (board)
     		{
-    			tile = TID_WALL;
+    			tile = board[(y * WIDTH) + x];	
     		}
     		else
-    		{	
+    		{
     			tile = TID_FLOOR;
     		}	
-			drawTile(gfx, tile, &rp, x << 4, y << 4);
+			drawTile(gfx, tile, rp, x << 4, y << 4);
 		}	    		
 	}
+	bltBitMapRastPort(gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
+	bltBitMapRastPort(gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
+	bltBitMapRastPort(gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
 }
 
 int main(int argc, char **argv)
@@ -193,16 +202,16 @@ int main(int argc, char **argv)
 
         sd.wd = &bwd.wd;
 
-        if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS))
+        if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
-            WoRD *board;
+            WORD *board;
 
             /* Allocate space for board */
             if (board = allocBoard())
             {   
                 if (prepGUI(&sd, &bwd, board))
                 {
-                    eventLoop(&sd, &bwd.wd);
+                    eventLoop(&sd, &bwd.wd, board);
                     cleanGUI(&bwd);
                 }
                 FreeVec(board);

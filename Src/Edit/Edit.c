@@ -18,13 +18,22 @@
 #include "Edit.h"
 #include "Bobs.h"
 #include "IFF.h"
+#include "Screen.h"
 #include "Windows.h"
+#include "Blitter.h"
 
 #include "debug.h"
+
+#define MAX_LEVELS 30
+
+#define WHITE 2
+#define ESC_KEY 0x45
 
 #define ID_GAME MAKE_ID('G','A','M','E')
 #define ID_MAP  MAKE_ID('M','A','P',' ')
 #define ID_BODY MAKE_ID('B','O','D','Y')
+
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx);
 
 UBYTE mapTiles[] = "Back, Wall, Floor, KeyBox, KeyStone, SwitchBox, SwitchStone, Sand, Mud, Water, Fire, Hero, BombBox, Skull, Cherry";
 
@@ -135,7 +144,7 @@ VOID hitSelect(struct selectData *sd, struct IntuiMessage *msg)
 {
     if (msg->Class == IDCMP_GADGETDOWN)
     {
-        sd->selected = ((msg->MouseY >> 4) * sd->width) + (msg->MouseX >> 4);
+        sd->selected = (((msg->MouseY - sd->gd.gad->TopEdge) >> 4) * sd->width) + ((msg->MouseX - sd->gd.gad->LeftEdge) >> 4);
 
         updateSelect(sd, FALSE);
     }
@@ -148,7 +157,7 @@ LONG hitButton(struct gadgetData *gd, struct IntuiMessage *msg)
 
     if (msg->Class == IDCMP_GADGETDOWN)
     {        
-        select (gd->gad->GadgetID)
+        switch (gd->gad->GadgetID)
         {
             case GID_LOAD:
                 md->action = AID_LOAD;
@@ -163,17 +172,24 @@ LONG hitButton(struct gadgetData *gd, struct IntuiMessage *msg)
                 md->wd.done = TRUE;
                 break;
             case GID_PREV:
-                md->action = AID_PREV;
-                md->level--;
-                /* Decrease and redraw level number */
+            	if (md->level > 0)
+            	{
+	                md->action = AID_PREV;
+    	            md->level--;
+        	        /* Decrease and redraw level number */
+        	    }    
                 break;
             case GID_NEXT:
-                md->action = AID_NEXT;
-                md->level++;
-                /* Increase and redraw level number */
+            	if (md->level < MAX_LEVELS)
+            	{
+	                md->action = AID_NEXT;
+    	            md->level++;
+        	        /* Increase and redraw level number */
+        	    }    
                 break;
             default:
         }
+        action = md->action;
     }
     return(action);
 }
@@ -181,13 +197,12 @@ LONG hitButton(struct gadgetData *gd, struct IntuiMessage *msg)
 VOID drawNumber(struct RastPort *rp, WORD number)
 {
     UBYTE text[6];
-    WORD posx = 0, posy = 0;
+    WORD posx = 132, posy = 20;
 
-    sprintf(text, "%5d", number);
-
-    D(bug("Drawing number (%d)...\n", number));
+    sprintf(text, "%4d ", number);
 
     SetAPen(rp, WHITE);
+    SetBPen(rp, 5);
     SetDrMd(rp, JAM2);
     Move(rp, posx, posy + rp->Font->tf_Baseline);
     Text(rp, text, strlen(text));
@@ -197,10 +212,8 @@ VOID drawMenu(struct menuData *md)
 {
     struct screenData *sd = (struct screenData *)md->wd.w->WScreen->UserData;    
     WORD menuX = 0, menuY = 16;
-
-    D(bug("Drawing menu...\n"));
-
-    BltBitMapRastPort(sd->gfx, menuX, menuY, md->wd.w->RPort, 0, 0, md->wd.w->Width, md->wd.w->Height, 0xc0);
+    
+    bltBitMapRastPort(sd->gfx, menuX, menuY, md->wd.w->RPort, 0, 0, md->wd.w->Width, md->wd.w->Height, 0xc0);
 }
 
 LONG handleMenu(struct menuData *md)
@@ -222,7 +235,6 @@ LONG handleMenu(struct menuData *md)
                 if (gd->handleIDCMP)
                 {
                     action = gd->handleIDCMP(gd, msg);    
-                    D(bug("Menu action %d selected.\n", action));
 
                     switch (action)
                     {
@@ -246,8 +258,11 @@ LONG handleMenu(struct menuData *md)
     return(action);
 }
 
-VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
+VOID hitMenu(struct menuGadgetData *mgd, struct IntuiMessage *msg)
 {
+	struct screenData *sd = (struct screenData *)msg->IDCMPWindow->WScreen->UserData;
+	struct gadgetData *gd = &mgd->gd;
+
     if (msg->Class == IDCMP_GADGETDOWN)
     {
         struct Requester req;
@@ -256,9 +271,9 @@ VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
                
         /* Open menu */
         InitRequester(&req);
-        Request(wd->w, &req);
+        Request(&req, wd->w);
 
-        if (openWindow((struct windowData *)&rwd, (struct screenData *)wd->w->WScreen->UserData, 
+        if (openWindow((struct windowData *)&rwd, sd, 
             WA_Left,        0,
             WA_Top,         16,
             WA_Width,       160,
@@ -269,19 +284,45 @@ VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
         {
             static struct gadgetData loadGad, cancelGad, saveGad, prevGad, nextGad;
 
-            if (initGadget(&loadGad, NULL, 0, 0, 64, 16, GID_LOAD, hitButton))
+            if (initGadget(&loadGad, NULL, 0, 16, 64, 16, GID_LOAD, (APTR)hitButton))
             {
-                if (initGadget(&cancelGad, &loadGad, 80, 0, 64, 16, GID_CANCEL, hitButton))
+                if (initGadget(&cancelGad, &loadGad, 64, 16, 64, 16, GID_CANCEL, (APTR)hitButton))
                 {
-                    if (initGadget(&prevGad, &cancelGad, 0, 32, 64, 16, GID_PREV, hitButton))
+                    if (initGadget(&prevGad, &cancelGad, 0, 32, 64, 16, GID_PREV, (APTR)hitButton))
                     {
-                        if (initGadget(&nextGad, &prevGad, 80, 32, 64, 16, GID_NEXT, hitButton))
+                        if (initGadget(&nextGad, &prevGad, 64, 32, 64, 16, GID_NEXT, (APTR)hitButton))
                         {
-                            if (initGadget(&saveGad, &nextGad, 80, 64, 64, 16, GID_SAVE, hitButton))
+                            if (initGadget(&saveGad, &nextGad, 0, 48, 64, 16, GID_SAVE, (APTR)hitButton))
                             {
+                            	WORD action;
+                            	UBYTE name[5];
+                            	WORD level = rwd.level;
+                            	
                                 drawMenu(&rwd);
+                                drawNumber(rwd.wd.w->RPort, rwd.level);
                                 AddGList(rwd.wd.w, loadGad.gad, -1, -1, NULL);                                
-                                handleMenu(&rwd);
+                                
+                                action = handleMenu(&rwd);
+                                
+                                if (action == AID_CANCEL || action == AID_SAVE)
+                                {
+                                	rwd.level = level;
+                                }	
+                                
+                                if (action == AID_LOAD)
+                                {
+                                	sprintf(name, "%02d", rwd.level);
+                                	if (loadBoard(mgd->ed, name))
+                                	{
+                                		prepBitMap(mgd->ed->board, wd->w->RPort, sd->gfx);
+                                	}
+                                }
+                                else if (action == AID_SAVE)
+                                {
+                                	sprintf(name, "%02d", rwd.level);
+                                	saveBoard(mgd->ed, name);
+                                }	
+                                
                                 RemoveGList(rwd.wd.w, loadGad.gad, -1);
                                 freeGadget(&saveGad);
                             }
@@ -293,9 +334,9 @@ VOID hitMenu(struct gadgetData *gd, struct IntuiMessage *msg)
                 }
                 freeGadget(&loadGad);
             }
-            closeWindow(&rwd);
+            closeWindow(&rwd.wd);
         }
-        EndRequest(msg->IDCPWindow, &req);
+        EndRequest(&req, msg->IDCMPWindow);
     }
 }
 
@@ -327,14 +368,7 @@ WORD *allocBoard()
         {
             for (x = 0; x < WIDTH; x++)
             {
-                if (x == 0 || x == (WIDTH - 1) || y == 0 || y == (HEIGHT - 1))
-                {
-                    p[(y * WIDTH) + x] = TID_WALL;
-                }
-                else
-                {
-                    p[(y * WIDTH) + x] = TID_FLOOR;
-                }
+                p[(y * WIDTH) + x] = TID_FLOOR;
             }
         }
         return(p);
@@ -346,15 +380,10 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
 {
     WORD x = (msg->MouseX - ed->gd.gad->LeftEdge) >> 4, y = (msg->MouseY - ed->gd.gad->TopEdge) >> 4; /* Note: Substract gadget pos if needed */
 
-    if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-    {
-        return;
-    }
-
     if (msg->Class == IDCMP_GADGETDOWN)
     {
         ed->paint = TRUE;
-        ed->board[(y * WIDTH) + x] = ed->sd->selected;
+        ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
 
         drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
         drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
@@ -369,23 +398,30 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         {
             ed->paint = FALSE;
             ed->wd->activeGad = NULL;
-            drawTile(ed->tileGfx, ed->board[(ed->cursY * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+            
+            if (ed->cursX >= 0 && ed->cursX < WIDTH && ed->cursY >= 0 && ed->cursY < HEIGHT)
+            {
+	            drawTile(ed->tileGfx, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+	        }    
         }
     }
     else if (msg->Class == IDCMP_MOUSEMOVE)
     {
-        if (ed->cursX != x || ed->cursY != y)
-        {
-            if (ed->paint)
-            {
-                ed->board[(y * WIDTH) + x] = ed->sd->selected;
+    	if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+    	{
+    	    if (ed->cursX != x || ed->cursY != y)
+	        {
+        	    if (ed->paint)
+            	{
+                	ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
 
-                drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));                
-            }        
-            drawTile(ed->tileGfx, ed->board[(ed->cursY * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
-            ed->cursX = x;
-            ed->cursY = y;                        
-            drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+	                drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));                
+    	        }        
+        	    drawTile(ed->tileGfx, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+            	ed->cursX = x;
+	            ed->cursY = y;                        
+    	        drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+    	    }    
         }
     }
 }

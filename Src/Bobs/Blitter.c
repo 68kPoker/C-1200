@@ -1,17 +1,23 @@
 
+/*
+** GameX engine
+** Src > Bobs
+*/
+
 /* Blitter.c - Own Blitter functions */
 
 #include <assert.h>
 
 #include <hardware/custom.h>
 #include <graphics/rastport.h>
+
 #include <clib/graphics_protos.h>
 
 #include "Blitter.h"
 
 __far extern struct Custom custom;
 
-void bltBitMap(struct BitMap *sbm, WORD sx, WORD sy, struct BitMap *dbm, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
+VOID bltBitMap(struct BitMap *sbm, WORD sx, WORD sy, struct BitMap *dbm, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
 {
     struct Custom *c = &custom;
     LONG soffset = 0, doffset = 0;
@@ -58,7 +64,7 @@ void bltBitMap(struct BitMap *sbm, WORD sx, WORD sy, struct BitMap *dbm, WORD dx
     DisownBlitter();
 }
 
-void bltBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *drp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
+VOID bltBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *drp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
 {
     struct Layer *dl = drp->Layer;
     struct BitMap *dbm = drp->BitMap;
@@ -69,7 +75,7 @@ void bltBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *dr
         WORD adx = dx + dl->bounds.MinX;
         WORD ady = dy + dl->bounds.MinY;
 
-        LockLayer(0, dl);
+        /* LockLayer(0, dl); */
 
         for (dcr = dl->ClipRect; dcr != NULL; dcr = dcr->Next)
         {
@@ -87,7 +93,7 @@ void bltBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *dr
 
             bltBitMap(sbm, sx + ox, sy + oy, dbm, x0, y0, x1 - x0 + 1, y1 - y0 + 1, 0xc0);
         }
-        UnlockLayer(dl);
+        /* UnlockLayer(dl); */
     }
     else
     {
@@ -97,7 +103,7 @@ void bltBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *dr
 
 /* Fast Blit from source RastPort to destination RastPort */
 
-void clipBlit(struct RastPort *srp, WORD sx, WORD sy, struct RastPort *drp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
+VOID clipBlit(struct RastPort *srp, WORD sx, WORD sy, struct RastPort *drp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
 {
     struct Layer *sl = srp->Layer;
     struct BitMap *sbm = srp->BitMap;
@@ -129,4 +135,12 @@ void clipBlit(struct RastPort *srp, WORD sx, WORD sy, struct RastPort *drp, WORD
     {
         bltBitMapRastPort(sbm, sx, sy, drp, dx, dy, width, height, 0xc0);
     }
+}
+
+VOID bltMaskBitMapRastPort(struct BitMap *src, WORD sx, WORD sy, struct RastPort *rp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
+{
+    /* Temporary use of graphics call */
+
+    /* Will use custom function */
+    BltMaskBitMapRastPort(src, sx, sy, rp, dx, dy, width, height, minterm, src->Planes[src->Depth - 1]);
 }

@@ -14,15 +14,30 @@
 #include "Bobs.h"
 #include "Blitter.h"
 
-#define MAX_OBJECTS 20
+#define MAX_OBJECTS 20 /* Max. number of objects on the board */
 
-#define WHITE 2
+#define WHITE 2 /* Pen for frames */
 
-VOID drawTile(struct BitMap *bm, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos)
+#define MAX_TILES (320)
+
+/* Draw tile given by number */
+VOID drawTile(struct BitMap *tileGfx, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos)
 {
-    bltBitMapRastPort(bm, (tile % TILES) << 4, (tile / TILES) << 4, rp, xpos, ypos, 16, 16, 0xc0);
+    assert(tile < MAX_TILES);
+    assert(xpos >= 0 && xpos <= 304 && ypos >= 0 && ypos <= 240);
+
+    bltBitMapRastPort(tileGfx, (tile % TILES) << 4, (tile / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, 0xc0);
 }
 
+/* Draw tile given by position */
+VOID drawBoardTile(struct BitMap *tileGfx, WORD *board, struct RastPort *rp, WORD xpos, WORD ypos)
+{
+    assert(xpos >= 0 && xpos < WIDTH && ypos >= 0 && ypos < HEIGHT)
+
+    drawTile(tileGfx, board[(ypos * WIDTH) + xpos], rp, xpos << 4, ypos << 4);
+}
+
+/* Draw frame around tile */
 VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y)
 {
     SetAPen(rp, WHITE);
@@ -33,28 +48,65 @@ VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y)
     Draw(rp, x, y + 1);
 }
 
-VOID initBob(struct List *list, struct bobData *bd, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY, BYTE dir)
+/* initBob: Construct new Bob with initial state and add to list */
+VOID initBob(struct bobData *bd, struct List *list, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY, BYTE dir)
 {
     AddTail(list, &bd->node);
 
-    bd->gfx = gfx;
+    bd->gfx  = gfx;
+
     bd->gfxX = gfxX;
     bd->gfxY = gfxY;
-    bd->posX = bd->prevPosX[0] = bd->prevPosX[1] = posX;
-    bd->posY = bd->prevPosY[0] = bd->prevPosY[1] = posY;
 
-    bd->width = 16;
-    bd->height = 16;
-
-    bd->speed = 2; /* Default speed */
+    bd->state.posX = posX;
+    bd->state.posY = posY;
 
     bd->dir = dir; /* Direction */
     bd->pos = 0;
+
+    bd->prev[0] = bd->prev[1] = bd->state;
+
+    bd->width  = 16;
+    bd->height = 16;
+
+    bd->speed = BOB_SPEED;
 
     bd->update[0] = bd->update[1] = TRUE; /* This Bob must be drawn */
     bd->active = TRUE; /* This Bob is active */
 }
 
+/* Change Bob image */
+VOID changeBob(struct bobData *bd, WORD gfxX, WORD gfxY)
+{
+    if (bd->gfxX != gfxX || bd->gfxY != gfxY)
+    {
+        bd->gfxX = gfxX;
+        bd->gfxY = gfxY;
+        
+        /* Need to redraw in both buffers */
+        bd->update[0] = bd->update[1] = TRUE;
+    }
+}
+
+/* Trigger movement in given direction. Will start to move when ready. */
+VOID triggerBob(struct bobData *bd, WORD dir)
+{
+    bd->trig = dir;
+}
+
+/* Move Bob to new position */
+VOID moveBob(struct bobData *bd, WORD posX, WORD posY)
+{
+    if (bd->state.posX != posX || bd->state.posY != posY)
+    {
+        bd->state.posX = posX;
+        bd->state.posY = posY;
+
+        bd->update[0] = bd->update[1] = TRUE;
+    }
+}
+
+/* clearTiles: Draw tiles under given Bob position */
 VOID clearTiles(struct BitMap *tileGfx, struct RastPort *rp, WORD x, WORD y, WORD *board, WORD *offsets, WORD *n)
 {
     WORD tx = x >> 4, ty = y >> 4;
@@ -94,10 +146,26 @@ VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *
 
         if (bd->update[frame])
         {
-            clearTiles(tileGfx, rp, bd->prevPosX[frame], bd->prevPosY[frame], board, offsets, &n);
-            clearTiles(tileGfx, rp, bd->posX[frame], bd->posY[frame], board, offsets, &n);
+            clearTiles(tileGfx, rp, bd->prev[frame].posX, bd->prev[frame].posY, board, offsets, &n);
+            clearTiles(tileGfx, rp, bd->state.posX, bd->state.posY, board, offsets, &n);
         }
     }
+
+    /* Update also those inactive objects that were discarded */
+    for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
+    {
+        struct bobData *bd = (struct bobData *)node; 
+        
+        if (board[(bd->state.posY >> 4) * WIDTH + (bd->state.posX >> 4)] & 0x8000)
+        {
+            bd->update[frame] = TRUE;
+        }
+
+        if (board[((bd->state.posY + 15) >> 4) * WIDTH + ((bd->state.posX + 15) >> 4)] & 0x8000)
+        {
+            bd->update[frame] = TRUE;
+        }
+    }  
 
     /* Unflag floors */
     for (i = 0; i < n; i++)
@@ -109,22 +177,21 @@ VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *
 /* Draw Bob if required */
 VOID drawBob(struct bobData *bd, struct RastPort *rp, WORD frame, struct screenData *sd)
 {
-    WORD x = bd->posX, y = bd->posY;
+    WORD x = bd->state.posX, y = bd->state.posY;
+
     if (!bd->update[frame])
     {
         /* Bob doesn't require update in this frame */
         return;
     }
 
-    animateBob(bd, sd);
-
     /* We assume, background is cleaned up */
 
     /* Mask is included in source BitMap */
     bltMaskBitMapRastPort(bd->gfx, bd->gfxX, bd->gfxY, rp, x, y, bd->width, bd->height, ABC|ABNC|ANBC);
 
-    bd->prevPosX[frame] = x;
-    bd->prevPosY[frame] = y;
+    bd->prev[frame].posX = x;
+    bd->prev[frame].posY = y;
 }
 
 /* Draw Bob list */
@@ -142,15 +209,15 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
 {
     WORD frame = sd->frame;
 
+    if (bd->animate)
+    {
+        /* Call custom object animation */
+        bd->animate(bd, sd);
+    }
+
     /* Standard movement */
     if (bd->pos == 0)
     {        
-        if (bd->animate)
-        {
-            /* Call custom object animation */
-            bd->animate(bd, sd);
-        }
-
         if (bd->trig != 0)
         {
             bd->dir = bd->trig; /* Set direction */
@@ -159,9 +226,10 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
         }        
     }
     if (bd->pos > 0)
-    {
-        bd->prevPos[frame] = bd->pos;
+    {        
         bd->pos -= bd->speed; /* Update position if moving */        
+
+        bd->update[0] = bd->update[1] = TRUE;
 
         switch (bd->dir)
         {
@@ -173,12 +241,16 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
     }    
 }
 
-VOID moveBob(struct bobData *bd, WORD dir)
-{
-    bd->trig = dir;
-}
-
 VOID animateHero(struct bobData *bd, struct screenData *sd)
 {
+    /* Hero animation */
 
+    if (bd->pos == 0)
+    {
+        /* Ready for next order */
+    }
+    else
+    {
+        /* Set proper animation frame */
+    }
 }

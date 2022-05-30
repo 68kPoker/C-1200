@@ -9,6 +9,7 @@
 
 #include <exec/interrupts.h>
 #include <devices/inputevent.h>
+#include <graphics/gfx.h>
 
 #include "Bobs.h"
 
@@ -40,6 +41,8 @@ struct screenData
 
     struct List bobs; /* Bobs list */
     struct bobData bob[MAX_OBJECTS];
+    
+    PLANEPTR mask;
 };
 
 BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectangle *dclip, struct BitMap *bm[], ULONG *pal, struct TextAttr *ta);

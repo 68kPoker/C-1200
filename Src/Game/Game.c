@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include "debug.h"
 
 #include <dos/dos.h>
 #include <intuition/intuition.h>
@@ -62,17 +63,10 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
             if (pal = getPal(iff))
             {
                 struct BitMap *gfx;
-                BOOL mask;
-                if (gfx = unpackBitMap(iff, &mask))
+                if (gfx = unpackBitMap(iff, &sd->mask))
                 {
                     struct BitMap *bm[2];
                     WORD depth = gfx->Depth;
-
-                    if (mask)
-                    {
-                        /* Actual depth */
-                        depth--;
-                    }
 
                     if (bm[0] = AllocBitMap(width, height, depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
                     {
@@ -122,6 +116,10 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                         FreeBitMap(bm[0]);
                     }
                     FreeBitMap(gfx);
+                    if (sd->mask)
+                    {
+                    	FreeVec(sd->mask);
+                    }	
                 }
                 FreeVec(pal);
             }
@@ -143,6 +141,10 @@ VOID cleanup(struct screenData *sd)
     FreeBitMap(sd->bm[1]);
     FreeBitMap(sd->bm[0]);
     FreeBitMap(sd->gfx);
+    if (sd->mask)
+    {
+    	FreeVec(sd->mask);
+    }	
 }
 
 /* Prepare main GUI */
@@ -214,15 +216,26 @@ int main(int argc, char **argv)
 
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
-            WORD *board;
-
-            initBob(sd.bob + 0, &sd.bobs, sd.gfx, 240, 0, 32, 32, RIGHT);
-
-            drawBobs(&sd.bobs, bwd.wd.w->RPort, 0, &sd);
-
+        	WORD *board;
             /* Allocate space for board */
             if (board = allocBoard())
             {   
+    	        WORD i;
+            
+	            initBob(sd.bob + 0, &sd.bobs, sd.gfx, 192, 0, 32, 32, RIGHT);
+            
+    	        for (i = 0; i <= 64; i++)
+        	    {
+            		Wait(1L << sd.cd.sigBit);
+	            	clearBG(&sd.bobs, bwd.wd.w->RPort, 0, sd.gfx, board);
+    	        	moveBob(sd.bob + 0, 32 + i, 32);
+	    	        drawBobs(&sd.bobs, bwd.wd.w->RPort, 0, &sd);
+        	    	if ((i & 0xf) == 0)
+        	    	{
+        	    		Delay(50);
+        	    	}	
+	        	}    
+            
                 if (prepGUI(&sd, &bwd, board))
                 {
                     eventLoop(&sd, &bwd.wd, board);

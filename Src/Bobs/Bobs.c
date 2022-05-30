@@ -4,7 +4,9 @@
 ** Src > Bobs
 */
 
+#include <stdio.h>
 #include <assert.h>
+#include "debug.h"
 
 #include <intuition/intuition.h>
 
@@ -187,7 +189,7 @@ VOID drawBob(struct bobData *bd, struct RastPort *rp, WORD frame, struct screenD
     /* We assume, background is cleaned up */
 
     /* Mask is included in source BitMap */
-    bltMaskBitMapRastPort(bd->gfx, bd->gfxX, bd->gfxY, rp, x, y, bd->width, bd->height, ABC|ABNC|ANBC);
+    bltMaskBitMapRastPort(bd->gfx, bd->gfxX, bd->gfxY, rp, x, y, bd->width, bd->height, ABC|ABNC|ANBC, sd->mask);
 
     bd->prev[frame].posX = x;
     bd->prev[frame].posY = y;
@@ -197,7 +199,7 @@ VOID drawBob(struct bobData *bd, struct RastPort *rp, WORD frame, struct screenD
 VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd)
 {
     struct Node *node;
-
+    
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {
         drawBob((struct bobData *)node, rp, frame, sd);

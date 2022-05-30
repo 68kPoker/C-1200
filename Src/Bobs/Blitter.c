@@ -6,7 +6,9 @@
 
 /* Blitter.c - Own Blitter functions */
 
+#include <stdio.h>
 #include <assert.h>
+#include "debug.h"
 
 #include <hardware/custom.h>
 #include <graphics/rastport.h>
@@ -137,10 +139,38 @@ VOID clipBlit(struct RastPort *srp, WORD sx, WORD sy, struct RastPort *drp, WORD
     }
 }
 
-VOID bltMaskBitMapRastPort(struct BitMap *src, WORD sx, WORD sy, struct RastPort *rp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm)
+VOID bltMaskBitMapRastPort(struct BitMap *sbm, WORD sx, WORD sy, struct RastPort *rp, WORD dx, WORD dy, WORD width, WORD height, UBYTE minterm, PLANEPTR mask)
 {
-    /* Temporary use of graphics call */
+    WORD p;
+    WORD bpr = sbm->BytesPerRow / sbm->Depth;
+    struct BitMap *dbm = rp->BitMap;
+    struct Custom *c = &custom;
 
     /* Will use custom function */
-    BltMaskBitMapRastPort(src, sx, sy, rp, dx, dy, width, height, minterm, src->Planes[src->Depth - 1]);
+    
+    width += 16;
+    
+    OwnBlitter();
+    
+    for (p = 0; p < dbm->Depth; p++)
+    {
+	    WaitBlit();
+
+    	c->bltcon0 = 0xfca | ((dx & 0xf) << ASHIFTSHIFT);
+	    c->bltcon1 = ((dx & 0xf) << ASHIFTSHIFT);
+	    c->bltapt  = mask + (bpr * sy) + ((sx >> 4) << 1);
+	    c->bltbpt  = sbm->Planes[p] + (sbm->BytesPerRow * sy) + ((sx >> 4) << 1);
+	    c->bltcpt  = dbm->Planes[p] + (dbm->BytesPerRow * dy) + ((dx >> 4) << 1);
+	    c->bltdpt  = dbm->Planes[p] + (dbm->BytesPerRow * dy) + ((dx >> 4) << 1);
+	    c->bltamod = bpr - (width >> 3);
+	    c->bltbmod = sbm->BytesPerRow - (width >> 3);
+	    c->bltcmod = dbm->BytesPerRow - (width >> 3);
+	    c->bltdmod = dbm->BytesPerRow - (width >> 3);
+	    c->bltafwm = 0xffff;
+    	c->bltalwm = 0x0000;
+	    c->bltsizv = height;
+    	c->bltsizh = width >> 4;
+    }	
+
+    DisownBlitter();    
 }

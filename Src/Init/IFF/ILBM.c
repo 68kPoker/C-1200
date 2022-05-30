@@ -8,6 +8,7 @@
 #include <exec/memory.h>
 #include <datatypes/pictureclass.h>
 #include <libraries/iffparse.h>
+#include <graphics/gfxmacros.h>
 
 #include <clib/exec_protos.h>
 #include <clib/iffparse_protos.h>
@@ -138,7 +139,7 @@ BOOL unpackRow(BYTE **pSrc, BYTE *dest, LONG *pSize, WORD bpr, UBYTE cmp)
     return(TRUE);
 }
 
-struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
+struct BitMap *unpackBitMap(struct IFFHandle *iff, PLANEPTR *mask)
 {
     struct BitMap *bm;
     struct BitMapHeader *bmhd;
@@ -150,12 +151,16 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
         UBYTE cmp = bmhd->bmh_Compression;
         WORD bpr = RowBytes(width);
 
-        if (*mask = (bmhd->bmh_Masking == mskHasMask))
+        if (bmhd->bmh_Masking == mskHasMask)
         {            
-            ++depth;
+            *mask = AllocVec(RASSIZE(width, height), MEMF_CHIP);
         }
+        else
+        {
+        	*mask = NULL;
+        }	
 
-        if (bm = AllocBitMap(width, height, depth, BMF_INTERLEAVED, NULL))
+        if (bm = AllocBitMap(width, height, bmhd->bmh_Depth, BMF_INTERLEAVED, NULL))
         {
             BYTE *buffer;
             LONG size;
@@ -163,7 +168,7 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
             if (buffer = getChunkBuffer(iff, &size))
             {
                 WORD row, plane;
-                PLANEPTR planes[8 + 1];
+                PLANEPTR planes[8 + 1], maskPtr = *mask;
                 BYTE *curBuf = buffer;
                 LONG curSize = size;
                 BOOL success = FALSE;
@@ -172,7 +177,7 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
                 {
                     planes[plane] = bm->Planes[plane];
                 }
-
+                
                 for (row = 0; row < height; row++)
                 {
                     for (plane = 0; plane < depth; plane++)
@@ -187,6 +192,14 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
                     {
                         break;
                     }
+                    if (maskPtr)
+                    {
+	                    if (!(success = unpackRow(&curBuf, maskPtr, &curSize, bpr, cmp)))
+    	                {
+        	            	break;
+            	        }
+            	        maskPtr += bpr;
+            	    }    
                 }
                 FreeMem(buffer, size);
                 if (success)
@@ -196,6 +209,10 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
             }
             FreeBitMap(bm);
         }
+        if (*mask)
+        {
+        	FreeVec(mask);
+        }	
     }
     return(NULL);
 }

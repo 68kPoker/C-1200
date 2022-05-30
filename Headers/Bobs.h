@@ -50,8 +50,8 @@ struct bobData
 VOID initBob(struct bobData *bd, struct List *list, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY, BYTE dir);
 
 VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *tileGfx, WORD *board);
-VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame);
-VOID animateBob(struct bobData *bd, WORD frame);
+VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd);
+VOID animateBob(struct bobData *bd, struct screenData *sd);
 
 VOID drawTile(struct BitMap *bm, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos);
 VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y);

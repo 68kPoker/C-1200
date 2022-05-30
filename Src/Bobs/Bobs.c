@@ -13,6 +13,7 @@
 
 #include "Bobs.h"
 #include "Blitter.h"
+#include "Screen.h"
 
 #define MAX_OBJECTS 20 /* Max. number of objects on the board */
 
@@ -123,7 +124,7 @@ VOID clearTiles(struct BitMap *tileGfx, struct RastPort *rp, WORD x, WORD y, WOR
     tx = (x + 15) >> 4;
     ty = (y + 15) >> 4;
     offset = (ty * WIDTH) + tx;
-    *tile = &board[offset];
+    tile = &board[offset];
 
     if (!(*tile & 0x8000))
     {
@@ -195,13 +196,13 @@ VOID drawBob(struct bobData *bd, struct RastPort *rp, WORD frame, struct screenD
 }
 
 /* Draw Bob list */
-VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame)
+VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd)
 {
     struct Node *node;
 
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {
-        drawBob((struct bobData *)node, rp, frame);
+        drawBob((struct bobData *)node, rp, frame, sd);
     }
 }
 
@@ -221,7 +222,6 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
         if (bd->trig != 0)
         {
             bd->dir = bd->trig; /* Set direction */
-            bd->prevPos[frame] = bd->pos;
             bd->pos = 16;
         }        
     }
@@ -233,10 +233,10 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
 
         switch (bd->dir)
         {
-            case  1:     bd->posX += bd->speed; break;
-            case -1:     bd->posX -= bd->speed; break;
-            case  WIDTH: bd->posY += bd->speed; break;
-            case -WIDTH: bd->posY -= bd->speed; break;
+            case  1:     bd->state.posX += bd->speed; break;
+            case -1:     bd->state.posX -= bd->speed; break;
+            case  WIDTH: bd->state.posY += bd->speed; break;
+            case -WIDTH: bd->state.posY -= bd->speed; break;
         }
     }    
 }

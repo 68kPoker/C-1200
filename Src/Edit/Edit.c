@@ -52,17 +52,14 @@ BOOL loadBoard(struct editData *ed, STRPTR name)
                     struct ContextNode *cn;
 
                     if (cn = CurrentChunk(iff))
-                    {                    
-                        BYTE *buffer;
+                    {                                            
                         LONG size = cn->cn_Size;
-                        if (buffer = AllocVec(size, MEMF_PUBLIC))
+                        
+                        if (ReadChunkBytes(iff, ed->board, size) == size)
                         {
-                            if (ReadChunkBytes(iff, ed->board, size) == size)
-                            {
-                                closeIFF(iff);
-                                return(TRUE);
-                            }
-                        }                    
+                            closeIFF(iff);
+                            return(TRUE);
+                        }
                     }                    
                 }
             }

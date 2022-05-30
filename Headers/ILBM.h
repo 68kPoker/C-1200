@@ -14,6 +14,6 @@
 
 BOOL scanILBM(struct IFFHandle *iff);
 ULONG *getPal(struct IFFHandle *iff);
-struct BitMap *unpackBitMap(struct IFFHandle *iff);
+struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask);
 
 #endif /* ILBM_H */

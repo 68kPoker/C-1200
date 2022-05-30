@@ -7,6 +7,7 @@
 
 #include <clib/exec_protos.h>
 #include <clib/graphics_protos.h>
+#include <clib/alib_protos.h>
 
 #include "Libs.h"
 #include "IFF.h"
@@ -61,13 +62,21 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
             if (pal = getPal(iff))
             {
                 struct BitMap *gfx;
-                if (gfx = unpackBitMap(iff))
+                BOOL mask;
+                if (gfx = unpackBitMap(iff, &mask))
                 {
                     struct BitMap *bm[2];
+                    WORD depth = gfx->Depth;
 
-                    if (bm[0] = AllocBitMap(width, height, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
+                    if (mask)
                     {
-                        if (bm[1] = AllocBitMap(width, height, gfx->Depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
+                        /* Actual depth */
+                        depth--;
+                    }
+
+                    if (bm[0] = AllocBitMap(width, height, depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
+                    {
+                        if (bm[1] = AllocBitMap(width, height, depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
                         {                
                         	struct RastPort rp;
                         	
@@ -95,6 +104,7 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                                         {                                                                                        
                                             if (sd->joyIO = openJoy(&sd->joyIE))
                                             {
+                                                NewList(&sd->bobs);
                                                 FreeVec(pal);
                                                 closeIFF(iff);
                                                 return(TRUE);
@@ -205,6 +215,10 @@ int main(int argc, char **argv)
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
             WORD *board;
+
+            initBob(sd.bob + 0, &sd.bobs, sd.gfx, 240, 0, 32, 32, RIGHT);
+
+            drawBobs(&sd.bobs, bwd.wd.w->RPort, 0, &sd);
 
             /* Allocate space for board */
             if (board = allocBoard())

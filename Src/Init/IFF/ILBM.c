@@ -138,7 +138,7 @@ BOOL unpackRow(BYTE **pSrc, BYTE *dest, LONG *pSize, WORD bpr, UBYTE cmp)
     return(TRUE);
 }
 
-struct BitMap *unpackBitMap(struct IFFHandle *iff)
+struct BitMap *unpackBitMap(struct IFFHandle *iff, BOOL *mask)
 {
     struct BitMap *bm;
     struct BitMapHeader *bmhd;
@@ -150,8 +150,8 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff)
         UBYTE cmp = bmhd->bmh_Compression;
         WORD bpr = RowBytes(width);
 
-        if (bmhd->bmh_Masking == mskHasMask)
-        {
+        if (*mask = (bmhd->bmh_Masking == mskHasMask))
+        {            
             ++depth;
         }
 

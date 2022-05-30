@@ -15,8 +15,6 @@
 #include "Blitter.h"
 #include "Screen.h"
 
-#define MAX_OBJECTS 20 /* Max. number of objects on the board */
-
 #define WHITE 2 /* Pen for frames */
 
 #define MAX_TILES (320)
@@ -208,8 +206,6 @@ VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenD
 
 VOID animateBob(struct bobData *bd, struct screenData *sd)
 {
-    WORD frame = sd->frame;
-
     if (bd->animate)
     {
         /* Call custom object animation */
@@ -251,6 +247,6 @@ VOID animateHero(struct bobData *bd, struct screenData *sd)
     }
     else
     {
-        /* Set proper animation frame */
+        /* Set proper movement animation frame */
     }
 }

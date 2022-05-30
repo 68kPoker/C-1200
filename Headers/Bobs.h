@@ -10,6 +10,8 @@
 #include <exec/types.h>
 #include <exec/nodes.h>
 
+#define MAX_OBJECTS 5 /* Max. number of objects on the board */
+
 #define BOB_SPEED 2  /* Default speed in pixels/frame */
 
 #define TILES 20 /* Tiles in a row */

@@ -10,6 +10,8 @@
 #include <exec/interrupts.h>
 #include <devices/inputevent.h>
 
+#include "Bobs.h"
+
 struct copperData
 {
     struct ViewPort *vp;
@@ -35,6 +37,9 @@ struct screenData
 
     struct IOStdReq *joyIO;
     struct InputEvent joyIE;
+
+    struct List bobs; /* Bobs list */
+    struct bobData bob[MAX_OBJECTS];
 };
 
 BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectangle *dclip, struct BitMap *bm[], ULONG *pal, struct TextAttr *ta);

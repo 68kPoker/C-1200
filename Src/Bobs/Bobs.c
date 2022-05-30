@@ -156,15 +156,20 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
             bd->dir = bd->trig; /* Set direction */
             bd->prevPos[frame] = bd->pos;
             bd->pos = 16;
-
-            bd->posX += bd->dir % WIDTH;
-            bd->posY += bd->dir / WIDTH;
         }        
     }
     if (bd->pos > 0)
     {
         bd->prevPos[frame] = bd->pos;
-        bd->pos -= bd->speed; /* Update position if moving */
+        bd->pos -= bd->speed; /* Update position if moving */        
+
+        switch (bd->dir)
+        {
+            case  1:     bd->posX += bd->speed; break;
+            case -1:     bd->posX -= bd->speed; break;
+            case  WIDTH: bd->posY += bd->speed; break;
+            case -WIDTH: bd->posY -= bd->speed; break;
+        }
     }    
 }
 

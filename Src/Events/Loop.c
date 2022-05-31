@@ -75,7 +75,7 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
             	if (msg->Class == IDCMP_REFRESHWINDOW)
             	{
             		BeginRefresh(wd->w);
-            		prepBitMap(board, wd->w->RPort, sd->gfx);
+            		prepBitMap(board, wd->w->RPort, sd);
             		EndRefresh(wd->w, TRUE);
             	}           
             	if (msg->Class == IDCMP_GADGETDOWN)

@@ -22,7 +22,7 @@ enum Tiles
     TID_FLOOR,    
     TID_KEY_BOX,
     TID_KEY_STONE,
-    TID_SWITCH_BOX,
+    TID_GRASS,
     TID_SWITCH_STONE,
     TID_SAND_BOX,
     TID_MUD,

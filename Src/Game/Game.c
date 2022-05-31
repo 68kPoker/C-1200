@@ -74,11 +74,11 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                     {
                         if (bm[1] = AllocBitMap(width, height, depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
                         {                
-                        	struct RastPort rp;
-                        	
-                        	InitRastPort(&rp);
-                        	rp.BitMap = bm[0];
-                        	
+                            struct RastPort rp;
+                            
+                            InitRastPort(&rp);
+                            rp.BitMap = bm[0];
+                            
                             /* Draw initial screen contents before opening */
                             prepBitMap(NULL, &rp, sd);                         
 
@@ -89,11 +89,11 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                                     if (addDBuf(sd))
                                     {                                    
                                         if (openWindow(wd, sd, 
-                                            WA_Left, 		0, 
-                                            WA_Top, 		0,
-                                            WA_Width, 		sd->s->Width,
-                                            WA_Height, 		sd->s->Height,
-                                            WA_Activate,	TRUE,
+                                            WA_Left,        0, 
+                                            WA_Top,         0,
+                                            WA_Width,       sd->s->Width,
+                                            WA_Height,      sd->s->Height,
+                                            WA_Activate,    TRUE,
                                             WA_IDCMP,       idcmp,
                                             TAG_DONE))
                                         {                                                                                        
@@ -119,8 +119,8 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                     FreeBitMap(gfx);
                     if (sd->mask)
                     {
-                    	FreeVec(sd->mask);
-                    }	
+                        FreeVec(sd->mask);
+                    }   
                 }
                 FreeVec(pal);
             }
@@ -144,8 +144,8 @@ VOID cleanup(struct screenData *sd)
     FreeBitMap(sd->gfx);
     if (sd->mask)
     {
-    	FreeVec(sd->mask);
-    }	
+        FreeVec(sd->mask);
+    }   
 }
 
 /* Prepare main GUI */
@@ -160,8 +160,8 @@ BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
         {
             if (initGadget(&bwd->menud.gd, &bwd->ed.gd, MENU_LEFT, MENU_TOP, MENU_WIDTH, MENU_HEIGHT, GID_MENU, (APTR)hitMenu))
             {
-            	bwd->menud.ed = &bwd->ed;
-            	
+                bwd->menud.ed = &bwd->ed;
+                
                 AddGList(bwd->wd.w, bwd->seld.gd.gad, -1, -1, NULL);
                 return(TRUE);
             }
@@ -186,24 +186,24 @@ VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
 
     for (y = 1; y < HEIGHT; y++)
     {
-    	for (x = 0; x < WIDTH; x++)
-    	{
-    		WORD tile;
-    		
-			if (board)
-    		{
-    			tile = board[(y * WIDTH) + x];
-    		}
-    		else
-    		{
-    			tile = TID_FLOOR;
-    		}	
-			drawTile(sd, tile, rp, x << 4, y << 4, FALSE);
-		}	    		
-	}
-	bltBitMapRastPort(sd->gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
-	bltBitMapRastPort(sd->gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
-	bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
+        for (x = 0; x < WIDTH; x++)
+        {
+            WORD tile;
+            
+            if (board)
+            {
+                tile = board[(y * WIDTH) + x];
+            }
+            else
+            {
+                tile = TID_FLOOR;
+            }   
+            drawTile(sd, tile, rp, x << 4, y << 4, FALSE);
+        }               
+    }
+    bltBitMapRastPort(sd->gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
+    bltBitMapRastPort(sd->gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
+    bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
 }
 
 int main(int argc, char **argv)
@@ -217,23 +217,23 @@ int main(int argc, char **argv)
 
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
-        	WORD *board;
+            WORD *board;
             /* Allocate space for board */
             if (board = allocBoard())
             {           
-	            initBob(sd.bob + 0, &sd.bobs, sd.gfx, TID_HERO << 4, 0, 10 << 4, 8 << 4, RIGHT);
-	            
-	            sd.bob[0].animate = animateHero;
-	            sd.bob[0].repeat = TRUE;
-	            
-	            sd.bob[0].type = OID_HERO;
-	            sd.bob[1].type = OID_BOX;
-	            
-	            sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
-	            
-	            AddTail(&sd.bobs, &sd.bob[0].node);
-	            AddTail(&sd.bobs, &sd.bob[1].node);
-	            
+                initBob(sd.bob + 0, &sd.bobs, sd.gfx, TID_HERO << 4, 0, 10 << 4, 8 << 4, RIGHT);
+                
+                sd.bob[0].animate = animateHero;
+                sd.bob[0].repeat = TRUE;
+                
+                sd.bob[0].type = OID_HERO;
+                sd.bob[1].type = OID_BOX;
+                
+                sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
+                
+                AddTail(&sd.bobs, &sd.bob[0].node);
+                AddTail(&sd.bobs, &sd.bob[1].node);
+                
                 if (prepGUI(&sd, &bwd, board))
                 {
                     eventLoop(&sd, &bwd.wd, board);

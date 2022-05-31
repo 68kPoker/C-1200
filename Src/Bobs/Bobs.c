@@ -33,33 +33,45 @@ VOID drawTile(struct screenData *sd, WORD tile, struct RastPort *rp, WORD xpos, 
     
     switch (TID(tile))
     {
-    	case TID_FLOOR:
-    	case TID_KEY_STONE:
-    	case TID_WALL:
-    		floor = TID(tile);
-    		break;    		
-    		
-    	case TID_KEY_BOX:
-    		floor = FLOOR(tile);
-    		break;	
-    		
-		default:
-			floor = TID_FLOOR;
-			break;	
-    }		
+        case TID_BACK:
+        case TID_FLOOR:
+        case TID_KEY_STONE:
+        case TID_WALL:
+        case TID_MUD:
+        case TID_FIRE:
+        case TID_GRASS:
+            floor = TID(tile);
+            break;          
+            
+        case TID_KEY_BOX:
+        case TID_SAND_BOX:
+        case TID_WATER_BOX:
+        case TID_BOMB_BOX:
+        case TID_SKULL:
+            floor = FLOOR(tile);
+            break;  
+            
+        default:
+            floor = TID_FLOOR;
+            break;  
+    }       
 
     bltBitMapRastPort(tileGfx, (floor % TILES) << 4, (floor / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, 0xc0);
 
     if (!floorOnly)
     {
-    	switch (TID(tile))
-    	{
-    		case TID_KEY_BOX:
-    		case TID_SKULL:
-    			obj = TID(tile);
-		        bltMaskBitMapRastPort(tileGfx, (obj % TILES) << 4, (obj / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, ABC|ABNC|ANBC, sd->mask);
-		        break;
-		}        
+        switch (TID(tile))
+        {
+            case TID_KEY_BOX:
+            case TID_SKULL:
+            case TID_CHERRY:
+            case TID_BOMB_BOX:
+            case TID_WATER_BOX:
+            case TID_SAND_BOX:
+                obj = TID(tile);
+                bltMaskBitMapRastPort(tileGfx, (obj % TILES) << 4, (obj / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, ABC|ABNC|ANBC, sd->mask);
+                break;
+        }        
     }
 }
 
@@ -239,15 +251,18 @@ VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenD
     
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {
-        drawBob((struct bobData *)node, rp, frame, sd);        
+        if (((struct bobData *)node)->active)
+        {
+            drawBob((struct bobData *)node, rp, frame, sd);        
+        }    
     }
 
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {
-    	if (((struct bobData *)node)->active)
-    	{
-        	animateBob((struct bobData *)node, sd, board);
-        }	
+        if (((struct bobData *)node)->active)
+        {
+            animateBob((struct bobData *)node, sd, board);
+        }   
     }
 }
 
@@ -270,8 +285,8 @@ VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board)
             
             if (!bd->repeat)
             {
-            	bd->trig = 0;
-            }	
+                bd->trig = 0;
+            }   
         }        
     }
     if (bd->pos > 0)
@@ -286,6 +301,22 @@ VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board)
             case -1:     bd->state.posX -= bd->speed; break;
             case  WIDTH: bd->state.posY += bd->speed; break;
             case -WIDTH: bd->state.posY -= bd->speed; break;
+        }
+        
+        if (bd->pos == 0)
+        {
+            WORD tile = board[bd->tileOffset]; 
+        
+            if (TID(tile) == TID_SAND_BOX && FLOOR(tile) == TID_MUD)
+            {
+                bd->active = FALSE;
+                board[bd->tileOffset] = TID_GRASS | (TID_GRASS << 8);
+            }
+            else if (TID(tile) == TID_WATER_BOX && FLOOR(tile) == TID_FIRE)
+            {
+                bd->active = FALSE;
+                board[bd->tileOffset] = TID_GRASS | (TID_GRASS << 8);
+            }    
         }
     }    
 }
@@ -302,31 +333,59 @@ VOID animateHero(struct bobData *bd, struct screenData *sd, WORD *board)
             /* Check if movement is possible */
             WORD cur = bd->tileOffset, dest = cur + bd->trig, past = dest + bd->trig;
             
+            bd->speed = 2;
+            
             if (TID(board[dest]) == TID_WALL || TID(board[dest]) == TID_BACK)
             {
                 /* Stop hero */
                 bd->trig = 0;
             }
-            else if (TID(board[dest]) == TID_KEY_BOX)
+            else if (TID(board[dest]) == TID_KEY_BOX    ||
+                     TID(board[dest]) == TID_SAND_BOX   ||
+                     TID(board[dest]) == TID_WATER_BOX  ||
+                     TID(board[dest]) == TID_BOMB_BOX   ||
+                     TID(board[dest]) == TID_SKULL)
             {
-            	if (TID(board[past]) == TID_FLOOR || TID(board[past]) == TID_KEY_STONE)
-            	{
-	            	initBob(sd->bob + 1, &sd->bobs, sd->gfx, 3 << 4, 0, (dest % WIDTH) << 4, (dest / WIDTH) << 4, bd->trig);
-	            	sd->bob[1].trig = bd->trig;
-	            	sd->bob[1].repeat = FALSE;
+                if (TID(board[past]) == TID_FLOOR       || 
+                    TID(board[past]) == TID_KEY_STONE   ||
+                    TID(board[past]) == TID_MUD         ||
+                    TID(board[past]) == TID_GRASS       ||
+                    TID(board[past]) == TID_FIRE)
+                {
+                    initBob(sd->bob + 1, &sd->bobs, sd->gfx, TID(board[dest]) << 4, 0, (dest % WIDTH) << 4, (dest / WIDTH) << 4, bd->trig);
+                    sd->bob[1].trig = bd->trig;
+                    sd->bob[1].repeat = FALSE;
+                    bd->speed = 1;
 
                     setOBJ(board[past], board[dest]);
                     remOBJ(board[dest]); /* Put hero object */
-            	}
-            	else
-            	{
-            		bd->trig = 0;
-            	}	
+                }
+                else
+                {
+                    bd->trig = 0;
+                }   
             }
         }
     }
     else
     {
         /* Set proper movement animation frame */
+        
+        if (bd->dir == -1)
+        {
+            changeBob(bd, (10 + ((bd->pos >> 2) & 0x1)) << 4, 16);
+        }
+        else if (bd->dir == 1)
+        {
+            changeBob(bd, (12 + ((bd->pos >> 2) & 0x1)) << 4, 16);
+        }
+        else if (bd->dir == WIDTH)
+        {
+            changeBob(bd, (14 + ((bd->pos >> 2) & 0x1)) << 4, 16);
+        }
+        else if (bd->dir == -WIDTH)
+        {
+            changeBob(bd, (16 + ((bd->pos >> 2) & 0x1)) << 4, 16);
+        }    
     }
 }

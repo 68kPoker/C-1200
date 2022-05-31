@@ -5,6 +5,7 @@
 */
 
 #include <intuition/intuition.h>
+#include <devices/inputevent.h>
 
 #include <clib/exec_protos.h>
 #include <clib/intuition_protos.h>
@@ -12,6 +13,8 @@
 #include "Loop.h"
 #include "Windows.h"
 #include "Screen.h"
+#include "Bobs.h"
+#include "Joy.h"
 
 VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
 {
@@ -50,6 +53,8 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
         {
             /* Swap buffers here */
             /* swapBuf(sd); */
+
+            drawBobs(&sd->bobs, wd->w-RPort, 0, sd, board);
         }
 
         if (result & sigMasks[EID_USER])
@@ -103,6 +108,18 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
         if (result & sigMasks[EID_JOYSTICK])
         {
             /* Handle joystick */
+            if (GetMsg(joyIO->io_Message.mn_ReplyPort))
+            {
+                if (joyIE->ie_X == 0 || joyIE->ie_Y == 0)
+                {
+                    sd->bob[0].trig = (joyIE->ie_Y * WIDTH) + joyIE->ie_X;
+                }
+                else
+                {
+                    sd->bob[0].trig = 0;
+                }
+                readJoy(joyIO, joyIE);
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ struct bobData
     struct Node node;
     struct BitMap *gfx; /* Graphics data, includes mask bitplane */
     WORD gfxX, gfxY;
+    WORD tileOffset; /* Tile position */
     BYTE pos, dir;
     struct bobState state, prev[2]; /* Current and previous position */
     BYTE width, height; /* Bob size (16 x 16) */
@@ -45,15 +46,15 @@ struct bobData
     BOOL update[2]; /* Requires redraw in this buffer (short for state-difference)? */
     BOOL active; /* Process animation? */
     WORD trig; /* Trigger movement (same as direction) */
-    VOID (*animate)(struct bobData *bd, struct screenData *sd); /* Custom animation routine */
+    VOID (*animate)(struct bobData *bd, struct screenData *sd, WORD *board); /* Custom animation routine */
 };
 
 /* initBob: Construct new Bob with initial state and add to list */
 VOID initBob(struct bobData *bd, struct List *list, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY, BYTE dir);
 
 VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *tileGfx, WORD *board);
-VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd);
-VOID animateBob(struct bobData *bd, struct screenData *sd);
+VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board);
+VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board);
 
 VOID drawTile(struct BitMap *bm, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos);
 VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y);

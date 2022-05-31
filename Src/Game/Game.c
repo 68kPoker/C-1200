@@ -219,23 +219,9 @@ int main(int argc, char **argv)
         	WORD *board;
             /* Allocate space for board */
             if (board = allocBoard())
-            {   
-    	        WORD i;
-            
+            {           
 	            initBob(sd.bob + 0, &sd.bobs, sd.gfx, 192, 0, 32, 32, RIGHT);
-            
-    	        for (i = 0; i <= 64; i++)
-        	    {
-            		Wait(1L << sd.cd.sigBit);
-	            	clearBG(&sd.bobs, bwd.wd.w->RPort, 0, sd.gfx, board);
-    	        	moveBob(sd.bob + 0, 32 + i, 32);
-	    	        drawBobs(&sd.bobs, bwd.wd.w->RPort, 0, &sd);
-        	    	if ((i & 0xf) == 0)
-        	    	{
-        	    		Delay(50);
-        	    	}	
-	        	}    
-            
+              
                 if (prepGUI(&sd, &bwd, board))
                 {
                     eventLoop(&sd, &bwd.wd, board);

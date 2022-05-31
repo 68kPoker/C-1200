@@ -62,6 +62,8 @@ VOID initBob(struct bobData *bd, struct List *list, struct BitMap *gfx, WORD gfx
     bd->state.posX = posX;
     bd->state.posY = posY;
 
+    bd->tileOffset = ((posY >> 4) * WIDTH) + (posX >> 4);
+
     bd->dir = dir; /* Direction */
     bd->pos = 0;
 
@@ -191,27 +193,36 @@ VOID drawBob(struct bobData *bd, struct RastPort *rp, WORD frame, struct screenD
     /* Mask is included in source BitMap */
     bltMaskBitMapRastPort(bd->gfx, bd->gfxX, bd->gfxY, rp, x, y, bd->width, bd->height, ABC|ABNC|ANBC, sd->mask);
 
+    bd->update[frame] = FALSE;
+
     bd->prev[frame].posX = x;
     bd->prev[frame].posY = y;
 }
 
 /* Draw Bob list */
-VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd)
+VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board)
 {
     struct Node *node;
     
+    clearBG(list, rp, frame, sd->gfx, board);
+    
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {
-        drawBob((struct bobData *)node, rp, frame, sd);
+        drawBob((struct bobData *)node, rp, frame, sd);        
+    }
+
+    for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
+    {
+        animateBob((struct bobData *)node, sd);
     }
 }
 
-VOID animateBob(struct bobData *bd, struct screenData *sd)
+VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board)
 {
     if (bd->animate)
     {
         /* Call custom object animation */
-        bd->animate(bd, sd);
+        bd->animate(bd, sd, board);
     }
 
     /* Standard movement */
@@ -239,13 +250,24 @@ VOID animateBob(struct bobData *bd, struct screenData *sd)
     }    
 }
 
-VOID animateHero(struct bobData *bd, struct screenData *sd)
+VOID animateHero(struct bobData *bd, struct screenData *sd, WORD *board)
 {
     /* Hero animation */
 
     if (bd->pos == 0)
     {
         /* Ready for next order */
+        if (bd->trig != 0)
+        {
+            /* Check if movement is possible */
+            WORD cur = bd->tileOffset, dest = cur + bd->trig, past = dest + bd->trig;
+
+            if (board[dest] == TID_WALL)
+            {
+                /* Stop hero */
+                bd->trig = 0;
+            }
+        }
     }
     else
     {

@@ -5,6 +5,7 @@
 */
 
 #include <devices/gameport.h>
+#include <devices/inputevent.h>
 
 #include <clib/exec_protos.h>
 
@@ -20,7 +21,6 @@ BOOL checkCon(struct IOStdReq *io)
     io->io_Command = GPD_ASKCTYPE;
     io->io_Data = &con;
     io->io_Length = sizeof(BYTE);
-    io->io_Flags = IOF_QUICK;
     DoIO((struct IORequest *)io);
 
     if (con == GPCT_NOCONTROLLER)
@@ -31,7 +31,6 @@ BOOL checkCon(struct IOStdReq *io)
         io->io_Command = GPD_SETCTYPE;
         io->io_Data = &con;
         io->io_Length = sizeof(BYTE);
-        io->io_Flags = IOF_QUICK;
         DoIO((struct IORequest *)io);
     }
 
@@ -47,7 +46,6 @@ VOID clearCon(struct IOStdReq *io)
     io->io_Command = GPD_SETCTYPE;
     io->io_Data = &con;
     io->io_Length = sizeof(BYTE);
-    io->io_Flags = IOF_QUICK;
     DoIO((struct IORequest *)io);
 }
 
@@ -63,7 +61,6 @@ VOID setTrig(struct IOStdReq *io)
     io->io_Command = GPD_SETTRIGGER;
     io->io_Data = &gpt;
     io->io_Length = sizeof(gpt);
-    io->io_Flags = IOF_QUICK;
     DoIO((struct IORequest *)io);
 }
 
@@ -72,7 +69,6 @@ VOID clearIO(struct IOStdReq *io)
     io->io_Command = CMD_CLEAR;
     io->io_Data = NULL;
     io->io_Length = 0;
-    io->io_Flags = IOF_QUICK;
     DoIO((struct IORequest *)io);
 }
 
@@ -81,7 +77,6 @@ VOID readJoy(struct IOStdReq *io, struct InputEvent *ie)
     io->io_Command = GPD_READEVENT;
     io->io_Data = ie;
     io->io_Length = sizeof(*ie);
-    io->io_Flags = 0;
     SendIO((struct IORequest *)io);
 }
 

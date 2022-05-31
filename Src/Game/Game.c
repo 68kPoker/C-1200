@@ -179,7 +179,7 @@ VOID cleanGUI(struct boardWindowData *bwd)
     freeGadget((struct gadgetData *)&bwd->seld);
 }
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx)
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
 {
     WORD x, y;
 
@@ -191,13 +191,13 @@ VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx)
     		
 			if (board)
     		{
-    			tile = board[(y * WIDTH) + x];	
+    			tile = board[(y * WIDTH) + x];
     		}
     		else
     		{
     			tile = TID_FLOOR;
     		}	
-			drawTile(gfx, tile, rp, x << 4, y << 4);
+			drawTile(sd, tile, rp, x << 4, y << 4, FALSE);
 		}	    		
 	}
 	bltBitMapRastPort(gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
@@ -220,8 +220,21 @@ int main(int argc, char **argv)
             /* Allocate space for board */
             if (board = allocBoard())
             {           
-	            initBob(sd.bob + 0, &sd.bobs, sd.gfx, 192, 0, 32, 32, RIGHT);
-              
+	            initBob(sd.bob + 0, &sd.bobs, sd.gfx, TID_HERO << 4, 0, 10 << 4, 8 << 4, RIGHT);
+	            
+	            sd.bob[0].animate = animateHero;
+	            sd.bob[0].repeat = TRUE;
+	            
+	            sd.bob[0].type = OID_HERO;
+	            sd.bob[1].type = OID_BOX;
+	            
+	            sd.bob[0].floor = sd.bob[1].floor = TID_FLOOR;
+	            
+	            sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
+	            
+	            AddTail(&sd.bobs, &sd.bob[0].node);
+	            AddTail(&sd.bobs, &sd.bob[1].node);
+	            
                 if (prepGUI(&sd, &bwd, board))
                 {
                     eventLoop(&sd, &bwd.wd, board);

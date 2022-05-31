@@ -113,12 +113,12 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         {
             for (col = 0; col < sd->width; col++)
             {
-                drawTile(sd->tileGfx, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
+                drawTile(sd, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
             }
         }
         col = sd->selected % sd->width;
         row = sd->selected / sd->width;
-        drawFrame(sd->tileGfx, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
+        drawFrame(sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
     }
 
     if (sd->selected != sd->prevSelected)
@@ -127,11 +127,11 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         
         col = sd->prevSelected % sd->width;
         row = sd->prevSelected / sd->width;
-        drawTile(sd->tileGfx, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
+        drawTile(sd, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
 
         col = sd->selected % sd->width;
         row = sd->selected / sd->width;
-        drawFrame(sd->tileGfx, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
+        drawFrame(sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
 
         sd->prevSelected = sd->selected;
     }
@@ -292,7 +292,7 @@ VOID hitMenu(struct menuGadgetData *mgd, struct IntuiMessage *msg)
                             if (initGadget(&saveGad, &nextGad, 0, 48, 64, 16, GID_SAVE, (APTR)hitButton))
                             {
                             	WORD action;
-                            	UBYTE name[5];
+                            	UBYTE name[10];
                             	WORD level = rwd.level;
                             	
                                 drawMenu(&rwd);
@@ -308,15 +308,15 @@ VOID hitMenu(struct menuGadgetData *mgd, struct IntuiMessage *msg)
                                 
                                 if (action == AID_LOAD)
                                 {
-                                	sprintf(name, "%02d", rwd.level);
+                                	sprintf(name, "%02d.lev", rwd.level);
                                 	if (loadBoard(mgd->ed, name))
                                 	{
-                                		prepBitMap(mgd->ed->board, wd->w->RPort, sd->gfx);
+                                		prepBitMap(mgd->ed->board, wd->w->RPort, sd);
                                 	}
                                 }
                                 else if (action == AID_SAVE)
                                 {
-                                	sprintf(name, "%02d", rwd.level);
+                                	sprintf(name, "%02d.lev", rwd.level);
                                 	saveBoard(mgd->ed, name);
                                 }	
                                 
@@ -382,8 +382,8 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         ed->paint = TRUE;
         ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
 
-        drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
-        drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+        drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);
+        drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
 
         ed->cursX = x;
         ed->cursY = y;        
@@ -398,7 +398,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             
             if (ed->cursX >= 0 && ed->cursX < WIDTH && ed->cursY >= 0 && ed->cursY < HEIGHT)
             {
-	            drawTile(ed->tileGfx, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+	            drawTile(ed->screen, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
 	        }    
         }
     }
@@ -412,12 +412,12 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             	{
                 	ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
 
-	                drawTile(ed->tileGfx, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));                
+	                drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
     	        }        
-        	    drawTile(ed->tileGfx, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4));
+        	    drawTile(ed->screen, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
             	ed->cursX = x;
 	            ed->cursY = y;                        
-    	        drawFrame(ed->tileGfx, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
+    	        drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
     	    }    
         }
     }

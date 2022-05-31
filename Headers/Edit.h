@@ -28,10 +28,10 @@ enum Tiles
     TID_MUD,
     TID_WATER_BOX,
     TID_FIRE,
-    TID_HERO,
     TID_BOMB_BOX,
     TID_SKULL,
     TID_CHERRY,
+    TID_HERO,
     TID_COUNT
 };
 
@@ -80,7 +80,7 @@ struct editData
     WORD cursX, cursY;
     struct windowData *wd;
     WORD *board; /* Array of tiles */
-    struct BitMap *tileGfx;
+    struct screenData *screen;
 };
 
 struct menuGadgetData

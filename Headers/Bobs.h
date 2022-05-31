@@ -26,6 +26,20 @@
 
 #define OPPOSITE(dir) (-dir)
 
+#define TID(tile) (tile & 0x00ff) /* Obtain tile/object */
+
+#define setOBJ(floor, obj) (floor = ((floor & 0x00ff) << 8) | (obj & 0x00ff)) /* Add floor info */
+
+#define remOBJ(floor) (floor = ((floor >> 8) & 0x00ff))
+
+#define FLOOR(tile) ((tile >> 8) & 0x00ff)
+
+enum
+{
+	OID_HERO,
+	OID_BOX
+};	
+
 /* Bob state Class */
 struct bobState
 {
@@ -45,8 +59,9 @@ struct bobData
     WORD speed; /* Movement speed in pixels/frame */
     BOOL update[2]; /* Requires redraw in this buffer (short for state-difference)? */
     BOOL active; /* Process animation? */
-    WORD trig; /* Trigger movement (same as direction) */
+    BYTE trig, repeat; /* Trigger movement (same as direction) */
     VOID (*animate)(struct bobData *bd, struct screenData *sd, WORD *board); /* Custom animation routine */
+    WORD type;
 };
 
 /* initBob: Construct new Bob with initial state and add to list */
@@ -56,7 +71,9 @@ VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *
 VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board);
 VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board);
 
-VOID drawTile(struct BitMap *bm, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos);
-VOID drawFrame(struct BitMap *bm, struct RastPort *rp, WORD x, WORD y);
+VOID drawTile(struct screenData *sd, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos);
+VOID drawFrame(struct RastPort *rp, WORD x, WORD y);
+
+VOID animateHero(struct bobData *bd, struct screenData *sd, WORD *board);
 
 #endif /* BOBS_H */

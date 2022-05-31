@@ -31,11 +31,11 @@ Init/Windows/Windows.o: $(inc)Windows.h
 
 Init/Devs/Joy.o: $(inc)Joy.h
 
-Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h $(inc)Blitter.h
+Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h $(inc)Blitter.h $(inc)Bobs.h $(inc)IFF.h
 
-Bobs/Bobs.o: $(inc)Bobs.h $(inc)Blitter.h
+Bobs/Bobs.o: $(inc)Bobs.h $(inc)Blitter.h $(inc)Screen.h
 
-Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h
+Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h
 
 Bobs/Blitter.o: $(inc)Blitter.h
 

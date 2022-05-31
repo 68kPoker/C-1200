@@ -4,6 +4,9 @@
 ** Src > Events
 */
 
+#include <stdio.h>
+#include "debug.h"
+
 #include <intuition/intuition.h>
 #include <devices/inputevent.h>
 
@@ -54,7 +57,7 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
             /* Swap buffers here */
             /* swapBuf(sd); */
 
-            drawBobs(&sd->bobs, wd->w-RPort, 0, sd, board);
+            drawBobs(&sd->bobs, wd->w->RPort, 0, sd, board);
         }
 
         if (result & sigMasks[EID_USER])

@@ -67,11 +67,11 @@ struct bobData
 /* initBob: Construct new Bob with initial state and add to list */
 VOID initBob(struct bobData *bd, struct List *list, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY, BYTE dir);
 
-VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *tileGfx, WORD *board);
+VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board);
 VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board);
 VOID animateBob(struct bobData *bd, struct screenData *sd, WORD *board);
 
-VOID drawTile(struct screenData *sd, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos);
+VOID drawTile(struct screenData *sd, WORD tile, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly);
 VOID drawFrame(struct RastPort *rp, WORD x, WORD y);
 
 VOID animateHero(struct bobData *bd, struct screenData *sd, WORD *board);

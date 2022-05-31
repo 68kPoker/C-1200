@@ -68,7 +68,7 @@ struct selectData
     WORD width, height; /* In tiles */
     WORD selected, prevSelected; /* Selected tile */
     struct windowData *wd;
-    struct BitMap *tileGfx; /* Tile graphics */
+    struct screenData *screen; /* Tile graphics */
 };
 
 /* Board editing */
@@ -96,9 +96,9 @@ struct menuData
     WORD level;
 };
 
-BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct BitMap *gfx);
+BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct screenData *sd);
 
-BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct BitMap *gfx, WORD *board);
+BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, WORD *board);
 
 WORD *allocBoard();
 

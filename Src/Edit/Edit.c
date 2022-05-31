@@ -33,7 +33,7 @@
 #define ID_MAP  MAKE_ID('M','A','P',' ')
 #define ID_BODY MAKE_ID('B','O','D','Y')
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx);
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd);
 
 UBYTE mapTiles[] = "Back, Wall, Floor, KeyBox, KeyStone, SwitchBox, SwitchStone, Sand, Mud, Water, Fire, Hero, BombBox, Skull, Cherry";
 
@@ -113,7 +113,7 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         {
             for (col = 0; col < sd->width; col++)
             {
-                drawTile(sd, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
+                drawTile(sd->screen, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
             }
         }
         col = sd->selected % sd->width;
@@ -127,11 +127,11 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         
         col = sd->prevSelected % sd->width;
         row = sd->prevSelected / sd->width;
-        drawTile(sd, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
+        drawTile(sd->screen, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
 
         col = sd->selected % sd->width;
         row = sd->selected / sd->width;
-        drawFrame(sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
+        drawFrame(sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4));
 
         sd->prevSelected = sd->selected;
     }
@@ -337,7 +337,7 @@ VOID hitMenu(struct menuGadgetData *mgd, struct IntuiMessage *msg)
     }
 }
 
-BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct BitMap *gfx)
+BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct screenData *screen)
 {
     if (initGadget(&sd->gd, prev, left, top, width << 4, height << 4, GID_SELECT, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitSelect))
     {
@@ -345,7 +345,7 @@ BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD 
         sd->height = height;
         sd->selected = sd->prevSelected = selected;
         sd->wd = wd;
-        sd->tileGfx = gfx;
+        sd->screen = screen;
 
         updateSelect(sd, TRUE);
         return(TRUE);
@@ -380,7 +380,11 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     if (msg->Class == IDCMP_GADGETDOWN)
     {
         ed->paint = TRUE;
-        ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
+        
+        WORD *tile = &ed->board[((y + 1) * WIDTH) + x];
+        WORD select = ed->sd->selected;
+        
+        *tile = select | (TID_FLOOR << 8);
 
         drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);
         drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
@@ -410,7 +414,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
 	        {
         	    if (ed->paint)
             	{
-                	ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected;
+                	ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected | (TID_FLOOR << 8);
 
 	                drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
     	        }        
@@ -423,12 +427,12 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     }
 }
 
-BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct BitMap *gfx, WORD *board)
+BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, WORD *board)
 {
     if (initGadget(&ed->gd, prev, left, top, WIDTH << 4, HEIGHT << 4, GID_BOARD, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitEdit))
     {
         ed->wd = wd;
-        ed->tileGfx = gfx;
+        ed->screen = screen;
         ed->board = board;
         ed->paint = FALSE;        
         ed->cursX = ed->cursY = 0;

@@ -28,23 +28,38 @@ VOID drawTile(struct screenData *sd, WORD tile, struct RastPort *rp, WORD xpos, 
     struct BitMap *tileGfx = sd->gfx;
     WORD floor, obj = 0;
 
-    assert(tile < MAX_TILES);
+    /* assert(tile < MAX_TILES); */
     assert(xpos >= 0 && xpos <= 304 && ypos >= 0 && ypos <= 240);
+    
+    switch (TID(tile))
+    {
+    	case TID_FLOOR:
+    	case TID_KEY_STONE:
+    	case TID_WALL:
+    		floor = TID(tile);
+    		break;    		
+    		
+    	case TID_KEY_BOX:
+    		floor = FLOOR(tile);
+    		break;	
+    		
+		default:
+			floor = TID_FLOOR;
+			break;	
+    }		
 
-    if (floor = FLOOR(tile))
-    {
-        /* Object present */
-        obj = TID(tile);
-    }    
-    else
-    {
-        floor = tile;
-    }
     bltBitMapRastPort(tileGfx, (floor % TILES) << 4, (floor / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, 0xc0);
 
-    if (obj && !floorOnly)
+    if (!floorOnly)
     {
-        bltMaskBitMapRastPort(tileGfx, (obj & TILES) << 4, (obj / TILES) << 4, xpos & 0xfff0, ypos & 0xfff0, 16, 16, ABC|ABNC|ANBC, sd->mask);
+    	switch (TID(tile))
+    	{
+    		case TID_KEY_BOX:
+    		case TID_SKULL:
+    			obj = TID(tile);
+		        bltMaskBitMapRastPort(tileGfx, (obj % TILES) << 4, (obj / TILES) << 4, rp, xpos & 0xfff0, ypos & 0xfff0, 16, 16, ABC|ABNC|ANBC, sd->mask);
+		        break;
+		}        
     }
 }
 
@@ -153,7 +168,7 @@ VOID clearTiles(struct screenData *sd, struct RastPort *rp, WORD x, WORD y, WORD
 }
 
 /* Clear background under Bobs (using tile graphics) */
-VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct BitMap *tileGfx, WORD *board)
+VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, WORD *board)
 {
     struct Node *node;
     WORD offsets[MAX_OBJECTS * 4];
@@ -220,7 +235,7 @@ VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenD
 {
     struct Node *node;
     
-    clearBG(list, rp, frame, sd->gfx, board);
+    clearBG(list, rp, frame, sd, board);
     
     for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
     {

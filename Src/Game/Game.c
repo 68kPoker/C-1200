@@ -26,7 +26,7 @@
 #define MENU_WIDTH 64
 #define MENU_HEIGHT 16
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct BitMap *gfx);
+VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd);
 
 struct boardWindowData
 {
@@ -67,6 +67,8 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                 {
                     struct BitMap *bm[2];
                     WORD depth = gfx->Depth;
+                    
+                    sd->gfx = gfx;
 
                     if (bm[0] = AllocBitMap(width, height, depth, BMF_DISPLAYABLE|BMF_INTERLEAVED, NULL))
                     {
@@ -78,11 +80,10 @@ BOOL setup(STRPTR name, struct screenData *sd, ULONG idcmp)
                         	rp.BitMap = bm[0];
                         	
                             /* Draw initial screen contents before opening */
-                            prepBitMap(NULL, &rp, gfx);                         
+                            prepBitMap(NULL, &rp, sd);                         
 
                             if (openScreen(sd, "Warehouse", PAL_MONITOR_ID|LORES_KEY, &dclip, bm, pal, &ta))
                             {                            
-                                sd->gfx = gfx;
                                 if (addCop(sd, "Warehouse", 0, 0, NULL))
                                 {
                                     if (addDBuf(sd))
@@ -153,9 +154,9 @@ BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
 {
     bwd->ed.sd = &bwd->seld; /* Link gadgets */
 
-    if (initSelect(&bwd->seld, NULL, 64, 0, TID_COUNT, 1, 1, &bwd->wd, sd->gfx))
+    if (initSelect(&bwd->seld, NULL, 64, 0, TID_COUNT, 1, 1, &bwd->wd, sd))
     {
-        if (initEdit(&bwd->ed, &bwd->seld.gd, 0, 16, &bwd->wd, sd->gfx, board))
+        if (initEdit(&bwd->ed, &bwd->seld.gd, 0, 16, &bwd->wd, sd, board))
         {
             if (initGadget(&bwd->menud.gd, &bwd->ed.gd, MENU_LEFT, MENU_TOP, MENU_WIDTH, MENU_HEIGHT, GID_MENU, (APTR)hitMenu))
             {
@@ -200,9 +201,9 @@ VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
 			drawTile(sd, tile, rp, x << 4, y << 4, FALSE);
 		}	    		
 	}
-	bltBitMapRastPort(gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
-	bltBitMapRastPort(gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
-	bltBitMapRastPort(gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
+	bltBitMapRastPort(sd->gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
+	bltBitMapRastPort(sd->gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
+	bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
 }
 
 int main(int argc, char **argv)
@@ -227,8 +228,6 @@ int main(int argc, char **argv)
 	            
 	            sd.bob[0].type = OID_HERO;
 	            sd.bob[1].type = OID_BOX;
-	            
-	            sd.bob[0].floor = sd.bob[1].floor = TID_FLOOR;
 	            
 	            sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
 	            

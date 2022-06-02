@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="pl">
+    <head>
+        <title>C-1200 Documentation Index</title>
+        <meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-2">
+    </head>
+    <body>
+        
+    <p><h3>C-1200 Class list:</h3>
+        <ul>
+            <li>Screen Data - root record:
+                <ul>
+                    <li>Bitmaps - double buffered raster</li>
+                    <li>Font - custom font</li>
+                    <li>Screen - intuition screen</li>
+                    <li>Double buffering info:<ul><li>Safe to draw message - replied when it's safe to draw</li><li>Currently hidden buffer index</li><li>Safe to draw indicator</li><li>Copper interrupt server - used to swap buffers</li></ul></li>
+                    <li>Graphics bitmap with mask</li>                    
+                </ul> 
+                </li>
+            <li>RastPort Data:<ul>
+            <li>Animated tiles - list of animated tiles</li>
+            <li>Bob list - list of Bobs in this RastPort</li>           
+            <li>Board - 2D array with background tiles (one/two/multiple layer)</li> 
+            </ul></li>
+            <li>Window Data:
+                <ul><li>Window - intuition window (without imagery)</li><li>Gadgets - intuition gadgets (without imagery)</li></ul>
+            </li>
+            <li>Custom Gadget classes:
+                <ul><li>Button</li><li>Checkmark</li><li>Radio</li><li>Listview</li><li>Slider</li></ul>
+            </li>
+            <li>Gameport Data - used for joystick</li>
+        </ul>
+
+<h3>C-1200 Screen Data:</h3><p>
+It contains intuition Screen with double-buffering. Once it receives safe to draw message, it sends it to the windows, which may refresh and sync themselves.
+The sync process is based on the update flags and the difference between graphics states.
+
+<h3>C-1200 RastPort Data:</h3><p>
+It contains additional data like graphics bitmap with mask but also background tiles, list of animated tiles and foreground Bobs.
+<h3>C-1200 Gadgets:</h3><p>
+These represent various UI controls. All have handlers which process input events from mouse, keyboard, joystick and timers.
+They must also care of sync with proper update, graphics state difference control.
+
+<p>Each graphics element, object and control has a <b>current state</b> and <b>two previous states</b>. The previous states are 
+    here so that the element knows which graphics part needs to be discarded or updated. Example: Bob has previous positions, so he knows which part of the buffer to discard.
+
+    But there are <b>two update flags</b>, set upon any appearance or position change to simplify state comparison.
+
+    The tile background is drawn whether:
+    <ol>
+        <li>It is drawn for first time.</li>
+        <li>It is animated tile.</li>
+        <li>It is located below animated object.</li>
+    </ol>
+    <p>
+
+    In the 2nd and 3rd case the objects which are not currently updated and located on discard area, must be updated.    
+    <h3>C-1200 Tiles (board):</h3><p>
+
+    Tile structure consists of <b>floor type</b>, <b>optional floor ID</b>, <b>optional object type</b> and <b>optional object ID</b>.
+
+    There are arrays containing additional information about identified floors and objects index using the ID.    
+
+    The floor ID is used for example for animated floors. 
+    <h3>C-1200 Tiles (graphics):</h3><p>
+
+    The graphics is calculated on floor, object types and additional info.
+
+    For optimization, the tile is redrawn only if there's a difference (based on screen tile sources and layers comparison).
+
+    <p>Cases:
+    <ul><li>The single-layer floor without object. It is drawn by <b>single-layer tile blit operation</b>.</li>
+        <li>The dual-layer floor is drawn using <b>Dual-layer tile blit operation</b>.</li>
+        <li>The single-layer floor with static object is drawn with dual-layer tile blit operation.</li>
+        <li>The moving objects are drawn once their previous and current position tile is drawn.</li>
+        </ul>
+        <h3>C-1200 Tiles (user interface):</h3><p>
+        The tiles IDs are also used to form user interface controls. The dual-layer may be used for window borders etc.
+
+        The text-box is used with tiles to form text-based controls. The slider-box is used to form sliders.
+
+
+    </body>    
+</html>

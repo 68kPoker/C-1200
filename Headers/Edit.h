@@ -8,32 +8,12 @@
 #define EDIT_H
 
 #include "Windows.h"
+#include "Board.h"
 
 #include <exec/types.h>
 
 #define WIDTH 20
 #define HEIGHT 16
-
-/* Editor tiles */
-enum Tiles
-{
-    TID_BACK,
-    TID_WALL,
-    TID_FLOOR,    
-    TID_KEY_BOX,
-    TID_KEY_STONE,
-    TID_GRASS,
-    TID_SWITCH_STONE,
-    TID_SAND_BOX,
-    TID_MUD,
-    TID_WATER_BOX,
-    TID_FIRE,
-    TID_BOMB_BOX,
-    TID_SKULL,
-    TID_CHERRY,
-    TID_HERO,
-    TID_COUNT
-};
 
 enum ID
 {

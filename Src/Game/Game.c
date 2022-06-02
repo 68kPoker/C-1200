@@ -20,6 +20,7 @@
 #include "Edit.h"
 #include "Loop.h"
 #include "Blitter.h"
+#include "Board.h"
 
 #define MENU_LEFT 0
 #define MENU_TOP  0
@@ -45,6 +46,9 @@ struct Rectangle dclip =
 {
     0, 0, 319, 255
 };
+
+/* Distribution of graphics frames */
+BYTE gfxCount[T_COUNT];
 
 /* Do the setup (graphics, screen, joystick, window) */
 
@@ -154,7 +158,7 @@ BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
 {
     bwd->ed.sd = &bwd->seld; /* Link gadgets */
 
-    if (initSelect(&bwd->seld, NULL, 64, 0, TID_COUNT, 1, 1, &bwd->wd, sd))
+    if (initSelect(&bwd->seld, NULL, 64, 0, T_COUNT, 1, 1, &bwd->wd, sd))
     {
         if (initEdit(&bwd->ed, &bwd->seld.gd, 0, 16, &bwd->wd, sd, board))
         {
@@ -184,26 +188,26 @@ VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
 {
     WORD x, y;
 
-    for (y = 1; y < HEIGHT; y++)
+    for (y = 1; y < B_HEIGHT; y++)
     {
-        for (x = 0; x < WIDTH; x++)
+        for (x = 0; x < B_WIDTH; x++)
         {
-            WORD tile;
+            tile *tile;
             
             if (board)
             {
-                tile = board[(y * WIDTH) + x];
+                tile = (tile *)board->board + (y * B_WIDTH) + x;
             }
             else
             {
-                tile = TID_FLOOR;
+                tile = tileTypes + T_FLOOR; /* Default floor */
             }   
             drawTile(sd, tile, rp, x << 4, y << 4, FALSE);
         }               
     }
     bltBitMapRastPort(sd->gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
     bltBitMapRastPort(sd->gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
-    bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, TID_COUNT << 4, 16, 0xc0);
+    bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, T_COUNT << 4, 16, 0xc0);
 }
 
 int main(int argc, char **argv)
@@ -215,32 +219,30 @@ int main(int argc, char **argv)
 
         sd.wd = &bwd.wd;
 
+        constructGfx(gfxCount, T_COUNT);
+
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
-            WORD *board;
+            static board board;
             /* Allocate space for board */
-            if (board = allocBoard())
-            {           
-                initBob(sd.bob + 0, &sd.bobs, sd.gfx, TID_HERO << 4, 0, 10 << 4, 8 << 4, RIGHT);
-                
-                sd.bob[0].animate = animateHero;
-                sd.bob[0].repeat = TRUE;
-                
-                sd.bob[0].type = OID_HERO;
-                sd.bob[1].type = OID_BOX;
-                
-                sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
-                
-                AddTail(&sd.bobs, &sd.bob[0].node);
-                AddTail(&sd.bobs, &sd.bob[1].node);
-                
-                if (prepGUI(&sd, &bwd, board))
-                {
-                    eventLoop(&sd, &bwd.wd, board);
-                    cleanGUI(&bwd);
-                }
-                FreeVec(board);
-            }
+
+            constructBoard(&board);
+        
+            /* Setup hero Bob */
+            initBob(sd.bob + TID_HERO - 1, sd.gfx, gfxCount[T_HERO] << 4, 0, 10 << 4, 8 << 4);
+            
+            sd.bob[0].animate = animateHero;
+            
+            sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
+            
+            AddTail(&sd.bobs, &sd.bob[0].node);
+            AddTail(&sd.bobs, &sd.bob[1].node);
+            
+            if (prepGUI(&sd, &bwd, board))
+            {
+                eventLoop(&sd, &bwd.wd, board);
+                cleanGUI(&bwd);
+            }        
             cleanup(&sd);
         }
         closeLibs();

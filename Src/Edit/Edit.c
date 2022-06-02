@@ -35,7 +35,7 @@
 
 VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd);
 
-UBYTE mapTiles[] = "Back, Wall, Floor, KeyBox, KeyStone, SwitchBox, SwitchStone, Sand, Mud, Water, Fire, Hero, BombBox, Skull, Cherry";
+UBYTE mapTiles[] = "Warehouse board file v1.7";
 
 BOOL loadBoard(struct editData *ed, STRPTR name)
 {
@@ -113,7 +113,7 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         {
             for (col = 0; col < sd->width; col++)
             {
-                drawTile(sd->screen, (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
+                drawTile(sd->screen, tileTypes + (row * sd->width) + col, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
             }
         }
         col = sd->selected % sd->width;
@@ -127,7 +127,7 @@ VOID updateSelect(struct selectData *sd, BOOL redraw)
         
         col = sd->prevSelected % sd->width;
         row = sd->prevSelected / sd->width;
-        drawTile(sd->screen, sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
+        drawTile(sd->screen, tileTypes + sd->prevSelected, sd->wd->w->RPort, sd->gd.gad->LeftEdge + (col << 4), sd->gd.gad->TopEdge + (row << 4), FALSE);
 
         col = sd->selected % sd->width;
         row = sd->selected / sd->width;
@@ -386,7 +386,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
         
         *tile = select | (TID_FLOOR << 8);
 
-        drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);
+        drawTile(ed->screen, tileTypes + ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);
         drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
 
         ed->cursX = x;
@@ -402,7 +402,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             
             if (ed->cursX >= 0 && ed->cursX < WIDTH && ed->cursY >= 0 && ed->cursY < HEIGHT)
             {
-                drawTile(ed->screen, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
+                drawTile(ed->screen, (tile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
             }    
         }
     }
@@ -416,9 +416,9 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
                 {
                     ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected | (TID_FLOOR << 8);
 
-                    drawTile(ed->screen, ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
+                    drawTile(ed->screen, tileTypes + ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
                 }        
-                drawTile(ed->screen, ed->board[((ed->cursY + 1) * WIDTH) + ed->cursX], ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
+                drawTile(ed->screen, (tile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
                 ed->cursX = x;
                 ed->cursY = y;                        
                 drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));

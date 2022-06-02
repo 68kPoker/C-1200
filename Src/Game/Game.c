@@ -48,7 +48,7 @@ struct Rectangle dclip =
 };
 
 /* Distribution of graphics frames */
-BYTE gfxCount[T_COUNT];
+WORD gfxCount[T_COUNT];
 
 /* Do the setup (graphics, screen, joystick, window) */
 

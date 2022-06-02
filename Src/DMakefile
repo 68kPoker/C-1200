@@ -1,7 +1,7 @@
 
 src = Game/Game.c Init/Libs/Libs.c Init/IFF/IFF.c Init/IFF/ILBM.c \
 	Init/Screen/Screen.c Init/Windows/Windows.c Init/Devs/Joy.c \
-	Edit/Edit.c Bobs/Bobs.c Events/Loop.c Bobs/Blitter.c
+	Edit/Edit.c Bobs/Bobs.c Events/Loop.c Bobs/Blitter.c Board/Board.c
 
 inc = /Headers/
 
@@ -39,3 +39,4 @@ Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h $(inc)Joy.h $(inc)Bob
 
 Bobs/Blitter.o: $(inc)Blitter.h
 
+Board/Board.o: $(inc)Board.h

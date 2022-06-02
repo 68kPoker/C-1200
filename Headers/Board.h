@@ -100,6 +100,6 @@ void constructBoard(board *op);
 short scanBoard(board *op);
 
 /* Graphics frame table constructor */
-VOID constructGfx(BYTE *gfxCount, WORD maxCount);
+VOID constructGfx(WORD *gfxCount, WORD maxCount);
 
 #endif /* BOARD_H */

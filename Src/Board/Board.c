@@ -25,22 +25,23 @@ tile tileTypes[T_COUNT] =
 };
 
 /* Init graphics frames */
-VOID constructGfx(BYTE *gfxCount, WORD maxCount)
+VOID constructGfx(WORD *gfxCount, WORD maxCount)
 {
     WORD i, prev = 0;
 
     assert(maxCount >= T_COUNT);
 
     /* Set graphics frames count */
+    gfxCount[T_NONE]       = 0;
     gfxCount[T_BACK]       = 1;
     gfxCount[T_WALL]       = 1;
     gfxCount[T_FLOOR]      = 1;
-    gfxCount[T_FLAGSTONE]  = 1;
-    gfxCount[T_SAND]       = 1;
     gfxCount[T_BOX]        = 1;
+    gfxCount[T_FLAGSTONE]  = 1;
+    gfxCount[T_SAND]       = 2;    
     gfxCount[T_SANDBOX]    = 1;        
-    gfxCount[T_HERO]       = GC_HERO;
-    gfxCount[T_MUD]        = GC_MUD;
+    gfxCount[T_MUD]        = 6;
+    gfxCount[T_HERO]       = 1;
 /*
     gfxCount[T_BUTTON]     = GC_BUTTON;
     gfxCount[T_TEXT]       = GC_TEXT;

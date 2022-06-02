@@ -21,14 +21,19 @@
 
 #define WHITE 2 /* Pen for frames */
 
+#define TILES 20
+
 #define MAX_TILES (320)
+
+#define MAX_OBJECTS 10
+
+extern WORD gfxCount[T_COUNT];
 
 /* Draw tile given by number */
 VOID drawTile(struct screenData *sd, tile *tile, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly)
 {
     struct BitMap *tileGfx = sd->gfx;
 
-    assert(tile < MAX_TILES);
     assert(xpos >= 0 && xpos <= 304 && ypos >= 0 && ypos <= 240);
 
     /* TODO: Dual-layer tiles, animation frames */
@@ -121,7 +126,7 @@ VOID clearTiles(struct screenData *sd, struct RastPort *rp, WORD x, WORD y, boar
 {
     WORD tx = x >> 4, ty = y >> 4;
     WORD offset = (ty * WIDTH) + tx;
-    tile *tile = (tile *)board->board + offset;
+    tile *tile = (struct sTile *)board->board + offset;
 
     if (!tile->flag)
     {                
@@ -133,7 +138,7 @@ VOID clearTiles(struct screenData *sd, struct RastPort *rp, WORD x, WORD y, boar
     tx = (x + 15) >> 4;
     ty = (y + 15) >> 4;
     offset = (ty * WIDTH) + tx;
-    tile = (tile *)board->board + offset;
+    tile = (struct sTile *)board->board + offset;
 
     if (!tile->flag)
     {
@@ -235,7 +240,7 @@ VOID animateBob(struct bobData *bd, struct screenData *sd, board *board)
     if (bd->animate)
     {
         /* Call custom object animation */
-        bd->animate(bd, sd, board);
+        bd->animate(bd);
     }
 }
 
@@ -293,7 +298,7 @@ VOID animateBob(struct bobData *bd, struct screenData *sd, board *board)
 /* Hero animation (not part of Bob handling) */
 
 #if 0
-VOID animateHero(struct bobData *bd, struct screenData *sd, board *board)
+VOID animateHero(struct bobData *bd)
 {
     /* Hero animation */
 

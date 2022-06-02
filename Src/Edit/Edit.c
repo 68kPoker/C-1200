@@ -33,7 +33,7 @@
 #define ID_MAP  MAKE_ID('M','A','P',' ')
 #define ID_BODY MAKE_ID('B','O','D','Y')
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd);
+VOID prepBitMap(board *board, struct RastPort *rp, struct screenData *sd);
 
 UBYTE mapTiles[] = "Warehouse board file v1.7";
 
@@ -353,26 +353,6 @@ BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD 
     return(FALSE);
 }
 
-WORD *allocBoard()
-{
-    WORD *p;
-
-    if (p = AllocVec(WIDTH * HEIGHT * sizeof(*p), MEMF_PUBLIC))
-    {
-        WORD x, y;
-
-        for (y = 0; y < HEIGHT; y++)
-        {
-            for (x = 0; x < WIDTH; x++)
-            {
-                p[(y * WIDTH) + x] = TID_FLOOR;
-            }
-        }
-        return(p);
-    }
-    return(NULL);
-}
-
 VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
 {
     WORD x = (msg->MouseX - ed->gd.gad->LeftEdge) >> 4, y = (msg->MouseY - ed->gd.gad->TopEdge) >> 4; /* Note: Substract gadget pos if needed */
@@ -381,10 +361,10 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     {
         ed->paint = TRUE;
         
-        WORD *tile = &ed->board[((y + 1) * WIDTH) + x];
+        tile *tile = (struct sTile *)ed->board + ((y + 1) * WIDTH) + x;
         WORD select = ed->sd->selected;
         
-        *tile = select | (TID_FLOOR << 8);
+        constructTile(tile, tileTypes[select].floor, tileTypes[select].type);
 
         drawTile(ed->screen, tileTypes + ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);
         drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
@@ -402,7 +382,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             
             if (ed->cursX >= 0 && ed->cursX < WIDTH && ed->cursY >= 0 && ed->cursY < HEIGHT)
             {
-                drawTile(ed->screen, (tile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
+                drawTile(ed->screen, (struct sTile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
             }    
         }
     }
@@ -414,11 +394,11 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             {
                 if (ed->paint)
                 {
-                    ed->board[((y + 1) * WIDTH) + x] = ed->sd->selected | (TID_FLOOR << 8);
+                    *((struct sTile *)ed->board + ((y + 1) * WIDTH) + x) = tileTypes[ed->sd->selected];
 
                     drawTile(ed->screen, tileTypes + ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
                 }        
-                drawTile(ed->screen, (tile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
+                drawTile(ed->screen, (struct sTile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
                 ed->cursX = x;
                 ed->cursY = y;                        
                 drawFrame(ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4));
@@ -427,7 +407,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     }
 }
 
-BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, WORD *board)
+BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, board *board)
 {
     if (initGadget(&ed->gd, prev, left, top, WIDTH << 4, HEIGHT << 4, GID_BOARD, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitEdit))
     {

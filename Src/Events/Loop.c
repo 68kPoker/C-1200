@@ -19,7 +19,7 @@
 #include "Bobs.h"
 #include "Joy.h"
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
+VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
 {
     struct IOStdReq *joyIO = sd->joyIO;
     struct InputEvent *joyIE = &sd->joyIE;
@@ -115,11 +115,11 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board)
             {
                 if (joyIE->ie_X == 0 || joyIE->ie_Y == 0)
                 {
-                    sd->bob[0].trig = (joyIE->ie_Y * WIDTH) + joyIE->ie_X;
+                    /* joyIE->ie_Y * B_WIDTH + joyIE->ie_X; */
                 }
                 else
                 {
-                    sd->bob[0].trig = 0;
+                    /* sd->bob[0].trig = 0; */
                 }
                 readJoy(joyIO, joyIE);
             }

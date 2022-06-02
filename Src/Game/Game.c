@@ -27,7 +27,7 @@
 #define MENU_WIDTH 64
 #define MENU_HEIGHT 16
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd);
+VOID prepBitMap(board *board, struct RastPort *rp, struct screenData *sd);
 
 struct boardWindowData
 {
@@ -154,7 +154,7 @@ VOID cleanup(struct screenData *sd)
 
 /* Prepare main GUI */
 
-BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, WORD *board)
+BOOL prepGUI(struct screenData *sd, struct boardWindowData *bwd, board *board)
 {
     bwd->ed.sd = &bwd->seld; /* Link gadgets */
 
@@ -184,7 +184,7 @@ VOID cleanGUI(struct boardWindowData *bwd)
     freeGadget((struct gadgetData *)&bwd->seld);
 }
 
-VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
+VOID prepBitMap(board *board, struct RastPort *rp, struct screenData *sd)
 {
     WORD x, y;
 
@@ -196,7 +196,7 @@ VOID prepBitMap(UWORD *board, struct RastPort *rp, struct screenData *sd)
             
             if (board)
             {
-                tile = (tile *)board->board + (y * B_WIDTH) + x;
+                tile = ((struct sTile *)board->board + (y * B_WIDTH) + x);
             }
             else
             {
@@ -229,18 +229,18 @@ int main(int argc, char **argv)
             constructBoard(&board);
         
             /* Setup hero Bob */
-            initBob(sd.bob + TID_HERO - 1, sd.gfx, gfxCount[T_HERO] << 4, 0, 10 << 4, 8 << 4);
+            constructBob(sd.bob + TID_HERO - 1, sd.gfx, gfxCount[T_HERO] << 4, 0, 10 << 4, 8 << 4);
             
-            sd.bob[0].animate = animateHero;
+            /* sd.bob[0].animate = animateHero; */
             
             sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
             
             AddTail(&sd.bobs, &sd.bob[0].node);
             AddTail(&sd.bobs, &sd.bob[1].node);
             
-            if (prepGUI(&sd, &bwd, board))
+            if (prepGUI(&sd, &bwd, &board))
             {
-                eventLoop(&sd, &bwd.wd, board);
+                eventLoop(&sd, &bwd.wd, &board);
                 cleanGUI(&bwd);
             }        
             cleanup(&sd);

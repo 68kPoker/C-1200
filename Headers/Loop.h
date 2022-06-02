@@ -9,6 +9,8 @@
 
 #include <exec/types.h>
 
+#include "Board.h"
+
 #define ESC_KEY 0x45
 
 enum Events
@@ -20,6 +22,6 @@ enum Events
     EID_COUNT
 };
 
-VOID eventLoop(struct screenData *sd, struct windowData *wd, UWORD *board);
+VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board);
 
 #endif /* LOOP_H */

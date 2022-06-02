@@ -59,7 +59,7 @@ struct editData
     BOOL paint;
     WORD cursX, cursY;
     struct windowData *wd;
-    WORD *board; /* Array of tiles */
+    board *board; /* Array of tiles */
     struct screenData *screen;
 };
 
@@ -78,7 +78,7 @@ struct menuData
 
 BOOL initSelect(struct selectData *sd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD selected, struct windowData *wd, struct screenData *sd);
 
-BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, WORD *board);
+BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, board *board);
 
 WORD *allocBoard();
 

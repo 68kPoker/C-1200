@@ -47,6 +47,6 @@ VOID animateBob(struct bobData *bd, struct screenData *sd, board *board);
 VOID drawTile(struct screenData *sd, tile *tile, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly);
 VOID drawFrame(struct RastPort *rp, WORD x, WORD y);
 
-VOID animateHero(struct bobData *bd, struct screenData *sd, board *board);
+VOID animateHero(struct bobData *bd);
 
 #endif /* BOBS_H */

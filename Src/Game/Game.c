@@ -224,19 +224,27 @@ int main(int argc, char **argv)
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {
             static board board;
+
+            board.gfx = sd.gfx;
+
+            identifiedObject *io;
+
             /* Allocate space for board */
 
             constructBoard(&board);
+
+            io = board.objectid + TID_HERO - 1;            
         
             /* Setup hero Bob */
-            constructBob(sd.bob + TID_HERO - 1, sd.gfx, gfxCount[T_HERO] << 4, 0, 10 << 4, 8 << 4);
+            constructBob(&io->bob, io->gfx, (gfxCount[T_HERO] % TILES) << 4, (gfxCount[T_HERO] / TILES) << 4, (io->offset % B_WIDTH) << 4, (io->offset / B_WIDTH) << 4);
             
-            /* sd.bob[0].animate = animateHero; */
-            
-            sd.bob[1].update[0] = sd.bob[1].update[1] = FALSE;
-            
-            AddTail(&sd.bobs, &sd.bob[0].node);
-            AddTail(&sd.bobs, &sd.bob[1].node);
+            io->animate = animateHero;
+            AddTail(&sd.bobs, &io->bob.node);
+
+            io = board.objectid + TID_ACTIVE_BOX - 1;
+
+            io->animate = animateObject;
+            AddTail(&sd.bobs, &io->bob.node);
             
             if (prepGUI(&sd, &bwd, &board))
             {

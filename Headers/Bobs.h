@@ -34,7 +34,6 @@ struct bobData
     BYTE width, height; /* Bob size (16 x 16) */    
     BOOL update[2]; /* Requires redraw in this buffer (short for state-difference)? */
     BOOL active; /* Process animation? */
-    VOID (*animate)(struct bobData *bd); /* Custom animation routine */    
 };
 
 /* Construct new Bob with initial state */

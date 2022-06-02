@@ -40,7 +40,6 @@ struct screenData
     struct InputEvent joyIE;
 
     struct List bobs; /* Bobs list */
-    struct bobData bob[MAX_BOBS];
     
     PLANEPTR mask;
 };

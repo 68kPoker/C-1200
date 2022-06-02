@@ -9,6 +9,8 @@
 
 #include <exec/types.h>
 
+#include "Bobs.h"
+
 #define B_WIDTH		20
 #define B_HEIGHT	16
 
@@ -74,17 +76,33 @@ typedef struct sTile
     short floor, type, flag;
 } tile;
 
-typedef struct sIdentified
+typedef struct sIdentifiedObject
 {
     short offset;
     short type;
-} identified;
+    short pos; /* 16-0 precise position */
+    short dir; /* Direction offset */
+    short trig; /* Movement trigger */
+    short repeat; /* Repeat movement */
+    short speed; /* Speed of movement */
+    short active;
+    struct bobData bob;
+    void (*animate)(struct sBoard *bp, struct sIdentifiedObject *io);
+} identifiedObject;
+
+typedef struct sIdentifiedFloor
+{
+    short offset;
+    short type;
+} identifiedFloor;
 
 typedef struct sBoard
 {
     tile board[B_HEIGHT][B_WIDTH]; /* Array */
     short placed, boxes;
-    identified floorid[B_OBJECTS], objectid[B_OBJECTS];
+    identifiedFloor floorid[B_OBJECTS];
+    identifiedObject objectid[B_OBJECTS];
+    struct BitMap *gfx;
 } board;
 
 extern tile tileTypes[T_COUNT];

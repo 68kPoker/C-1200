@@ -9,6 +9,8 @@
 
 #include "Board.h"
 
+#define TILES 20
+
 /* Default tiles */
 tile tileTypes[T_COUNT] =
 {
@@ -97,6 +99,7 @@ short moveObject(board *bp, tile *op, int offset)
 {
     short type = op->type;
     tile *destp = op + offset, *pastp = destp + offset;
+    identifiedObject *io;
 
     switch (type)
     {
@@ -130,6 +133,19 @@ short moveObject(board *bp, tile *op, int offset)
             bp->placed--;
             break;
         }
+        io = bp->objectid + TID_ACTIVE_BOX - 1;
+
+        /* Detach previous first */
+
+        ((tile *)bp->board + io->offset)->type = io->type;        
+
+        io->type = type;
+        type = -TID_ACTIVE_BOX;        
+        io->offset = op->offset;        
+
+        /* Attach Bob to active box */
+
+        constructBob(&io->bob, bp->gfx, (gfxCount[io->type] % TILES) << 4, (gfxCount[io->type] / TILES) << 4, (io->offset % B_WIDTH) << 4, (io->offset / B_WIDTH) << 4);
         break;
     default:
         return(0);
@@ -139,14 +155,18 @@ short moveObject(board *bp, tile *op, int offset)
     replaceObject(destp, type);
     if (type < 0)
     {
-        bp->objectid[(-type) - 1].offset += offset;
+        io = bp->objectid + (-type) - 1;
+        io->offset += offset;
+        io->pos = 16;
+        io->dir = offset;
+        io->active = TRUE;        
     }
     return(1);
 }
 
 void constructBoard(board *op)
 {
-    short x, y;
+    short x, y, offset;
     tile *tp;
 
     for (y = 0, tp = (tile *)op->board; y < B_HEIGHT; y++)
@@ -163,6 +183,9 @@ void constructBoard(board *op)
             }
         }
     }
+
+    op->objectid[TID_HERO - 1].offset = offset = getOffset(1, 1);
+    replaceObject((tile *)op->board + offset, -TID_HERO);
 }
 
 /* Scan board - count boxes and locate hero. Also locate animated floors and objects. */
@@ -193,4 +216,65 @@ short scanBoard(board *op)
         return(0);
     }
     return(1);
+}
+
+/* Bob tile movement (not part of Bob handling) */
+VOID animateObject(board *bp, identifiedObject *io)
+{    
+    if (io->pos > 0)
+    {        
+        /* Standard movement */
+        struct bobData *bd = &io->bob;
+
+        io->pos -= io->speed; /* Update position if moving */        
+
+        io->update[0] = io->update[1] = TRUE;
+
+        switch (io->dir)
+        {
+            case  Right:  bd->state.posX += io->speed; break;
+            case  Left:   bd->state.posX -= io->speed; break;
+            case  Down:   bd->state.posY += io->speed; break;
+            case  Up:     bd->state.posY -= io->speed; break;
+        }
+    }    
+}
+
+/* Hero animation (not part of Bob handling) */
+VOID animateHero(board *bp, identifiedObject *io)
+{
+    /* Hero animation */
+
+    if (io->pos == 0)
+    {
+        short trig = io->trig;
+        /* Ready for next order */
+        if (trig != 0)
+        {
+            /* Check if movement is possible */
+            moveObject(bp, (tile *)bp->board + io->offset, trig);            
+        }
+    }
+    else
+    {
+        /* Set proper movement animation frame */
+        WORD base = gfxCount[T_HERO];
+
+        animateObject(bp, io);
+        
+        if (io->dir == Right)
+        {
+            base += 2;
+        }
+        else if (io->dir == Up)
+        {
+            base += 4;
+        }
+        else if (io->dir == Down)
+        {
+            base += 6;
+        }    
+        base += (io->pos >> 2) & 0x1;
+        changeBob(&io->bob, (base % TILES) << 4, (base / TILES) << 4);
+    }
 }

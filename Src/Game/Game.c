@@ -48,7 +48,10 @@ struct Rectangle dclip =
 };
 
 /* Distribution of graphics frames */
-WORD gfxCount[T_COUNT];
+extern WORD gfxCount[T_COUNT];
+
+/* Tile types */
+extern tile tileTypes[T_COUNT];
 
 /* Do the setup (graphics, screen, joystick, window) */
 
@@ -220,6 +223,7 @@ int main(int argc, char **argv)
         sd.wd = &bwd.wd;
 
         constructGfx(gfxCount, T_COUNT);
+        constructTypes(tileTypes, T_COUNT);
 
         if (setup("Data/Graphics.iff", &sd, IDCMP_RAWKEY|IDCMP_GADGETDOWN|IDCMP_MOUSEMOVE|IDCMP_MOUSEBUTTONS|IDCMP_REFRESHWINDOW))
         {

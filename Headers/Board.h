@@ -26,7 +26,8 @@
 
 enum TileID
 {
-    TID_HERO = 1,
+    TID_NONE,
+    TID_HERO,
     TID_ACTIVE_BOX
 };
 
@@ -73,13 +74,12 @@ enum /* Gadget parts */
 
 typedef struct sTile
 {
-    short floor, type, flag;
+    short floor, floorID, type, typeID, flag;
 } tile;
 
 typedef struct sIdentifiedObject
 {
-    short offset;
-    short type;
+    short offset;    
     short pos; /* 16-0 precise position */
     short dir; /* Direction offset */
     short trig; /* Movement trigger */
@@ -92,16 +92,15 @@ typedef struct sIdentifiedObject
 
 typedef struct sIdentifiedFloor
 {
-    short offset;
-    short type;
+    short offset;    
 } identifiedFloor;
 
 typedef struct sBoard
 {
     tile board[B_HEIGHT][B_WIDTH]; /* Array */
     short placed, boxes;
-    identifiedFloor floorid[B_OBJECTS];
-    identifiedObject objectid[B_OBJECTS];
+    identifiedFloor floorData[B_OBJECTS];
+    identifiedObject objectData[B_OBJECTS];
     struct BitMap *gfx;
 } board;
 
@@ -119,5 +118,6 @@ short scanBoard(board *op);
 
 /* Graphics frame table constructor */
 VOID constructGfx(WORD *gfxCount, WORD maxCount);
+VOID constructTypes(struct sTile *tileTypes, WORD maxCount);
 
 #endif /* BOARD_H */

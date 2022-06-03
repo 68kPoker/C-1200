@@ -151,30 +151,27 @@ void removeObject(tile *op)
 short moveObject(struct sBoard *bp, struct sTile *op, int dir)
 {
     struct sTile *destp = op + dir;
-    struct sIdentifiedObject *io;
+    struct sIdentifiedObject *io = bp->objectData + destp->typeID - 1;
 
     replaceObject(destp, type);
     removeObject(op);
+
+    /* Set move info */ 
+    io->offset += dir;
+    io->pos = 16;
+    io->dir = dir;
+    io->active = TRUE;  
 
     if (destp->type == T_BOX || destp->type == T_SANDBOX)
     {
         /* Mark as active box */        
 
         destp->typeID = TID_ACTIVE_BOX;
-        io = &bp->objectData[TID_ACTIVE_BOX - 1];
-        
-        io->offset = (short)(destp - (struct sTile *)bp->board);
+        io = &bp->objectData[TID_ACTIVE_BOX - 1];        
 
-        /* TODO: Attach Bob to active box */;
+        /* Attach Bob to active box */
+        easyConstructBob(&io->bob, bp->gfx, gfxCount[dest->type], io->offset);
     }
-
-    /* Set move info */
-    io = bp->objectData + destp->typeID - 1;
-    io->offset += dir;
-    io->pos = 16;
-    io->dir = dir;
-    io->active = TRUE;        
-    
     return(1);
 }
 
@@ -266,45 +263,6 @@ VOID animateObject(board *bp, identifiedObject *io)
             case  Up:     bd->state.posY -= io->speed; break;
         }
     }    
-}
-
-/* Hero animation (not part of Bob handling) */
-VOID animateHero(board *bp, identifiedObject *io)
-{
-    /* Hero animation */
-
-    if (io->pos == 0)
-    {
-        short trig = io->trig;
-        /* Ready for next order */
-        if (trig != 0)
-        {
-            /* Check if movement is possible */
-            moveObject(bp, (tile *)bp->board + io->offset, trig);            
-        }
-    }
-    else
-    {
-        /* Set proper movement animation frame */
-        WORD base = gfxCount[T_HERO];
-
-        animateObject(bp, io);
-        
-        if (io->dir == Right)
-        {
-            base += 2;
-        }
-        else if (io->dir == Up)
-        {
-            base += 4;
-        }
-        else if (io->dir == Down)
-        {
-            base += 6;
-        }    
-        base += (io->pos >> 2) & 0x1;
-        changeBob(&io->bob, (base % TILES) << 4, (base / TILES) << 4);
-    }
 }
 
 LONG enterBack(struct sBoard *bp, struct sTile *src, WORD dir)
@@ -399,19 +357,57 @@ LONG animateMud(struct sBoard *bp, struct sTile *tile)
     
 }
 
+/* Hero animation */
 LONG animateHero(struct sBoard *bp, struct sTile *tile)
 {
-    /* Handle standard movement if pos > 0 */
+    struct sIdentifiedObject *io = bp->objectData + tile->typeID;    
 
-    /* Handle trigger when pos == 0 */
+    /* Handle trigger when pos == 0 */ 
+    if (io->pos == 0)
+    {
+        short trig = io->trig;
+        
+        /* Ready for next order */
+        if (trig != 0)
+        {
+            struct sTile *dest = tile + trig;
+            /* Check if movement is possible */
+            enterTile[dest->type](bp, tile, trig);            
+        }
+    }
+    else
+    {
+        /* Handle standard movement if pos > 0 */
+        /* Set proper movement animation frame */
+        WORD base = gfxCount[T_HERO];
+
+        animateObject(bp, io);
+        
+        if (io->dir == Right)
+        {
+            base += 2;
+        }
+        else if (io->dir == Up)
+        {
+            base += 4;
+        }
+        else if (io->dir == Down)
+        {
+            base += 6;
+        }    
+        base += (io->pos >> 2) & 0x1;
+        changeBob(&io->bob, (base % TILES) << 4, (base / TILES) << 4);
+    }
 }
 
 LONG animateBox(struct sBoard *bp, struct sTile *tile)
 {
-
+    struct sIdentifiedObject *io = bp->objectData + tile->typeID;    
+    
+    animateObject(bp, io);
 }
 
 LONG animateSandBox(struct sBoard *bp, struct sTile *tile)
 {
-    
+
 }

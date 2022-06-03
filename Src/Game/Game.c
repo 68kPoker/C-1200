@@ -237,17 +237,18 @@ int main(int argc, char **argv)
 
             constructBoard(&board);
 
-            io = board.objectid + TID_HERO - 1;            
+            io = board.objectid + TID_HERO - 1;
+
+            io->active = TRUE; /* Call animation routine */            
         
             /* Setup hero Bob */
-            constructBob(&io->bob, io->gfx, (gfxCount[T_HERO] % TILES) << 4, (gfxCount[T_HERO] / TILES) << 4, (io->offset % B_WIDTH) << 4, (io->offset / B_WIDTH) << 4);
-            
-            io->animate = animateHero;
+            easyConstructBob(&io->bob, io->gfx, gfxCount[T_HERO], io->offset);            
             AddTail(&sd.bobs, &io->bob.node);
 
-            io = board.objectid + TID_ACTIVE_BOX - 1;
+            io = board.objectData + TID_ACTIVE_BOX - 1;
+            io->bob.active = FALSE; /* Do not draw */
 
-            io->animate = animateObject;
+            io->active = TRUE; /* Call animation routine */
             AddTail(&sd.bobs, &io->bob.node);
             
             if (prepGUI(&sd, &bwd, &board))

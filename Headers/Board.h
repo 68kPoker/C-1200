@@ -15,6 +15,7 @@
 #define B_HEIGHT	16
 
 #define B_OBJECTS   10
+#define B_FLOORS    10 /* Animated floors */
 
 #define getOffset(x, y)       (y * B_WIDTH + x)
 #define getTilePtr(b, offset) ((tile *)(b)->board + offset)
@@ -79,7 +80,8 @@ typedef struct sTile
 
 typedef struct sIdentifiedObject
 {
-    short offset;    
+    short offset;   
+    short type; 
     short pos; /* 16-0 precise position */
     short dir; /* Direction offset */
     short trig; /* Movement trigger */
@@ -87,19 +89,19 @@ typedef struct sIdentifiedObject
     short speed; /* Speed of movement */
     short active;
     struct bobData bob;
-    void (*animate)(struct sBoard *bp, struct sIdentifiedObject *io);
 } identifiedObject;
 
 typedef struct sIdentifiedFloor
 {
     short offset;    
+    short type;
 } identifiedFloor;
 
 typedef struct sBoard
 {
     tile board[B_HEIGHT][B_WIDTH]; /* Array */
     short placed, boxes;
-    identifiedFloor floorData[B_OBJECTS];
+    identifiedFloor floorData[B_FLOORS];
     identifiedObject objectData[B_OBJECTS];
     struct BitMap *gfx;
 } board;

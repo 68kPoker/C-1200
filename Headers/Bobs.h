@@ -38,6 +38,7 @@ struct bobData
 
 /* Construct new Bob with initial state */
 VOID constructBob(struct bobData *bd, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY);
+VOID easyConstructBob(struct bobData *bd, struct BitMap *gfx, WORD gfx, WORD pos);
 
 VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, board *board);
 VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, board *board);

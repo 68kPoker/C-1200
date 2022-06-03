@@ -56,7 +56,22 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
         {
             /* Swap buffers here */
             /* swapBuf(sd); */
+            WORD i;
 
+            /* Animate identified objects */
+            for (i = 0; i < B_OBJECTS; i++)
+            {
+                struct sIdentifiedObject *io = board->objectData + i;
+                if (io->active)
+                {
+                    if (animateTile[io->type])
+                    {
+                        animateTile[io->type](board, board->board + io->offset);
+                    }
+                }
+            }
+
+            /* Draw Bobs */
             drawBobs(&sd->bobs, wd->w->RPort, 0, sd, board);
         }
 
@@ -115,11 +130,11 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
             {
                 if (joyIE->ie_X == 0 || joyIE->ie_Y == 0)
                 {
-                    /* joyIE->ie_Y * B_WIDTH + joyIE->ie_X; */
+                    board->objectData[TID_HERO - 1].trig = joyIE->ie_Y * B_WIDTH + joyIE->ie_X;
                 }
                 else
                 {
-                    /* sd->bob[0].trig = 0; */
+                    board->objectData[TID_HERO - 1].trig = 0;
                 }
                 readJoy(joyIO, joyIE);
             }

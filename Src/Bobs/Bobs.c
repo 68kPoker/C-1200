@@ -76,6 +76,11 @@ VOID drawFrame(struct RastPort *rp, WORD x, WORD y)
     Draw(rp, x, y + 1);
 }
 
+VOID easyConstructBob(struct bobData *bd, struct BitMap *gfx, WORD gfx, WORD pos)
+{
+    constructBob(bd, gfx, (gfx % TILES) << 4, (gfx / TILES) << 4, (pos % B_WIDTH) << 4, (pos / B_WIDTH << 4));
+}
+
 /* initBob: Construct new Bob with initial state and add to list */
 VOID constructBob(struct bobData *bd, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY)
 {

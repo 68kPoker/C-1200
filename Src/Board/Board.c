@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "debug.h"
 
 #include <exec/types.h>
 
@@ -39,12 +40,12 @@ LONG (*enterTile[T_COUNT])(struct sBoard *bp, struct sTile *src, WORD dir) =
     enterBack,
     enterWall,
     enterFloor,
-    enterFlagstone,
-    enterMud,
-    enterSand,
-    enterHero,
     enterBox,
-    enterSandBox
+    enterFlagstone,
+    enterSand,
+    enterSandBox,
+    enterMud,
+    enterHero
 };
 
 LONG (*animateTile[T_COUNT])(struct sBoard *bp, struct sTile *tile) = 
@@ -53,12 +54,12 @@ LONG (*animateTile[T_COUNT])(struct sBoard *bp, struct sTile *tile) =
     NULL,
     NULL,
     NULL,
-    NULL,
-    animateMud,
-    NULL,
-    animateHero,
     animateBox,
-    animateSandBox
+    NULL,
+    NULL,
+    animateSandBox,
+    animateMud,
+    animateHero
 };
 
 /* Construct new type */
@@ -101,7 +102,7 @@ VOID constructGfx(WORD *gfxCount, WORD maxCount)
     gfxCount[T_FLAGSTONE]  = 1;
     gfxCount[T_SAND]       = 2;    
     gfxCount[T_SANDBOX]    = 1;        
-    gfxCount[T_MUD]        = 6;
+    gfxCount[T_MUD]        = 6 + 16;
     gfxCount[T_HERO]       = 1;
 /*
     gfxCount[T_BUTTON]     = GC_BUTTON;
@@ -134,7 +135,6 @@ void replaceObject(tile *op, short object, short objectID)
     }
     op->type = object;
     op->typeID = objectID;
-    return(type);
 }
 
 /* Remove object from tile if present */
@@ -151,27 +151,30 @@ void removeObject(tile *op)
 short moveObject(struct sBoard *bp, struct sTile *op, int dir)
 {
     struct sTile *destp = op + dir;
-    struct sIdentifiedObject *io = bp->objectData + destp->typeID - 1;
-
-    replaceObject(destp, type);
-    removeObject(op);
-
-    /* Set move info */ 
-    io->offset += dir;
-    io->pos = 16;
-    io->dir = dir;
-    io->active = TRUE;  
-
-    if (destp->type == T_BOX || destp->type == T_SANDBOX)
+    struct sIdentifiedObject *io = bp->objectData + op->typeID - 1;
+    
+    if (op->type == T_BOX || op->type == T_SANDBOX)
     {
         /* Mark as active box */        
 
-        destp->typeID = TID_ACTIVE_BOX;
+        op->typeID = TID_ACTIVE_BOX;
         io = &bp->objectData[TID_ACTIVE_BOX - 1];        
+        
+        io->offset = (short)((tile *)op - bp->board); /* Box offset */
+        
+        easyConstructBob(&io->bob, bp->gfx, gfxCount[op->type], io->offset);
+    }    
 
-        /* Attach Bob to active box */
-        easyConstructBob(&io->bob, bp->gfx, gfxCount[dest->type], io->offset);
-    }
+    replaceObject(destp, op->type, op->typeID);
+    removeObject(op);
+
+    /* Set move info */ 
+    io->offset += dir; /* Note */
+    io->pos = 16;
+    io->dir = dir;
+    io->speed = 1;
+    io->active = TRUE;  
+    
     return(1);
 }
 
@@ -195,8 +198,10 @@ void constructBoard(board *op)
         }
     }
 
-    op->objectid[TID_HERO - 1].offset = offset = getOffset(1, 1);
+    op->objectData[TID_HERO - 1].offset = offset = getOffset(1, 1);
     replaceObject((tile *)op->board + offset, T_HERO, TID_HERO);
+    
+    D(bug("TypeID = %d\n", ((tile *)op->board + offset)->typeID));
 }
 
 /* Scan board - count boxes and locate hero. Also locate animated floors and objects. */
@@ -253,7 +258,7 @@ VOID animateObject(board *bp, identifiedObject *io)
 
         io->pos -= io->speed; /* Update position if moving */        
 
-        io->update[0] = io->update[1] = TRUE;
+        io->bob.update[0] = io->bob.update[1] = TRUE;
 
         switch (io->dir)
         {
@@ -360,8 +365,15 @@ LONG animateMud(struct sBoard *bp, struct sTile *tile)
 /* Hero animation */
 LONG animateHero(struct sBoard *bp, struct sTile *tile)
 {
-    struct sIdentifiedObject *io = bp->objectData + tile->typeID;    
-
+    struct sIdentifiedObject *io;
+    
+    if (tile->typeID == 0)
+    {
+        return;
+    }
+    
+    io = bp->objectData + tile->typeID - 1;  
+    
     /* Handle trigger when pos == 0 */ 
     if (io->pos == 0)
     {
@@ -373,6 +385,8 @@ LONG animateHero(struct sBoard *bp, struct sTile *tile)
             struct sTile *dest = tile + trig;
             /* Check if movement is possible */
             enterTile[dest->type](bp, tile, trig);            
+            
+            animateObject(bp, io);
         }
     }
     else
@@ -387,11 +401,11 @@ LONG animateHero(struct sBoard *bp, struct sTile *tile)
         {
             base += 2;
         }
-        else if (io->dir == Up)
+        else if (io->dir == Down)
         {
             base += 4;
         }
-        else if (io->dir == Down)
+        else if (io->dir == Up)
         {
             base += 6;
         }    
@@ -402,9 +416,14 @@ LONG animateHero(struct sBoard *bp, struct sTile *tile)
 
 LONG animateBox(struct sBoard *bp, struct sTile *tile)
 {
-    struct sIdentifiedObject *io = bp->objectData + tile->typeID;    
+    struct sIdentifiedObject *io;
     
-    animateObject(bp, io);
+    if (tile->typeID)
+    {
+        io = bp->objectData + tile->typeID - 1;    
+    
+        animateObject(bp, io);
+    }    
 }
 
 LONG animateSandBox(struct sBoard *bp, struct sTile *tile)

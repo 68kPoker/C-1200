@@ -26,6 +26,10 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
     struct RastPort *rp = &sd->s->RastPort;
     struct gfxData *gfxData = (struct gfxData *)rp->RP_User;
     struct BitMap *gfx = sd->gfx;
+    
+    struct sIdentifiedObject *io = board->objectData;
+    
+    D(bug("%d (%d)\n", io->type, T_HERO));
 
     ULONG sigMasks[EID_COUNT] =
     {
@@ -41,6 +45,8 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
     {
         total |= sigMasks[i];
     }
+    
+    scanBoard(board);
 
     while (!done)
     {
@@ -66,7 +72,7 @@ VOID eventLoop(struct screenData *sd, struct windowData *wd, board *board)
                 {
                     if (animateTile[io->type])
                     {
-                        animateTile[io->type](board, board->board + io->offset);
+                        animateTile[io->type](board, (tile *)board->board + io->offset);
                     }
                 }
             }

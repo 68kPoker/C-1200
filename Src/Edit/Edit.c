@@ -83,7 +83,7 @@ BOOL saveBoard(struct editData *ed, STRPTR name)
                 {
                     if (PopChunk(iff) == 0)
                     {
-                        LONG size = WIDTH * HEIGHT * sizeof(*ed->board);
+                        LONG size = B_WIDTH * B_HEIGHT * sizeof(*ed->board);
                         if (PushChunk(iff, ID_GAME, ID_BODY, size) == 0)
                         {
                             if (WriteChunkBytes(iff, ed->board, size) == size)
@@ -361,7 +361,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     {
         ed->paint = TRUE;
         
-        tile *tile = (struct sTile *)ed->board + ((y + 1) * WIDTH) + x;
+        tile *tile = (struct sTile *)ed->board + ((y + 1) * B_WIDTH) + x;
         WORD select = ed->sd->selected;
         
         constructTile(tile, tileTypes[select].floor, tileTypes[select].type);
@@ -380,7 +380,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
             ed->paint = FALSE;
             ed->wd->activeGad = NULL;
             
-            if (ed->cursX >= 0 && ed->cursX < WIDTH && ed->cursY >= 0 && ed->cursY < HEIGHT)
+            if (ed->cursX >= 0 && ed->cursX < B_WIDTH && ed->cursY >= 0 && ed->cursY < B_HEIGHT)
             {
                 drawTile(ed->screen, (struct sTile *)ed->board->board + (ed->cursY + 1) * B_WIDTH + ed->cursX, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (ed->cursX << 4), ed->gd.gad->TopEdge + (ed->cursY << 4), FALSE);
             }    
@@ -388,13 +388,13 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
     }
     else if (msg->Class == IDCMP_MOUSEMOVE)
     {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+        if (x >= 0 && x < B_WIDTH && y >= 0 && y < B_HEIGHT)
         {
             if (ed->cursX != x || ed->cursY != y)
             {
                 if (ed->paint)
                 {
-                    *((struct sTile *)ed->board + ((y + 1) * WIDTH) + x) = tileTypes[ed->sd->selected];
+                    *((struct sTile *)ed->board + ((y + 1) * B_WIDTH) + x) = tileTypes[ed->sd->selected];
 
                     drawTile(ed->screen, tileTypes + ed->sd->selected, ed->wd->w->RPort, ed->gd.gad->LeftEdge + (x << 4), ed->gd.gad->TopEdge + (y << 4), FALSE);                
                 }        
@@ -409,7 +409,7 @@ VOID hitEdit(struct editData *ed, struct IntuiMessage *msg)
 
 BOOL initEdit(struct editData *ed, struct gadgetData *prev, WORD left, WORD top, struct windowData *wd, struct screenData *screen, board *board)
 {
-    if (initGadget(&ed->gd, prev, left, top, WIDTH << 4, HEIGHT << 4, GID_BOARD, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitEdit))
+    if (initGadget(&ed->gd, prev, left, top, B_WIDTH << 4, B_HEIGHT << 4, GID_BOARD, (VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))hitEdit))
     {
         ed->wd = wd;
         ed->screen = screen;

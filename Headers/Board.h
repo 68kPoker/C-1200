@@ -40,13 +40,12 @@ enum Tiles
     T_BACK,
     T_WALL,
     T_FLOOR,
-    T_FLAGSTONE,
-    T_MUD,
-    T_SAND,
-
-    T_HERO,
     T_BOX,
+    T_FLAGSTONE,
+    T_SAND,
     T_SANDBOX,
+    T_MUD,
+    T_HERO,
     T_COUNT
 };
 
@@ -108,11 +107,13 @@ typedef struct sBoard
 
 extern tile tileTypes[T_COUNT];
 
+extern LONG (*animateTile[T_COUNT])(struct sBoard *bp, struct sTile *tile);
+
 /* Prototypes */
 
 void constructTile(tile *op, short floor, short object);
-short replaceObject(tile *op, short object);
-short removeObject(tile *op);
+void replaceObject(tile *op, short object, short objectID);
+void removeObject(tile *op);
 short moveObject(board *bp, tile *op, int offset);
 
 void constructBoard(board *op);

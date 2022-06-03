@@ -60,9 +60,9 @@ VOID drawTile(struct screenData *sd, tile *tile, struct RastPort *rp, WORD xpos,
 /* Draw tile given by position */
 VOID drawBoardTile(struct screenData *sd, board *board, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly)
 {
-    assert(xpos >= 0 && xpos < WIDTH && ypos >= 0 && ypos < HEIGHT)
+    assert(xpos >= 0 && xpos < B_WIDTH && ypos >= 0 && ypos < B_HEIGHT)
 
-    drawTile(sd, (tile *)board->board + (ypos * WIDTH) + xpos, rp, xpos << 4, ypos << 4, floorOnly);
+    drawTile(sd, (tile *)board->board + (ypos * B_WIDTH) + xpos, rp, xpos << 4, ypos << 4, floorOnly);
 }
 
 /* Draw frame around tile */
@@ -76,9 +76,9 @@ VOID drawFrame(struct RastPort *rp, WORD x, WORD y)
     Draw(rp, x, y + 1);
 }
 
-VOID easyConstructBob(struct bobData *bd, struct BitMap *gfx, WORD gfx, WORD pos)
+VOID easyConstructBob(struct bobData *bd, struct BitMap *gfx, WORD src, WORD pos)
 {
-    constructBob(bd, gfx, (gfx % TILES) << 4, (gfx / TILES) << 4, (pos % B_WIDTH) << 4, (pos / B_WIDTH << 4));
+    constructBob(bd, gfx, (src % TILES) << 4, (src / TILES) << 4, (pos % B_WIDTH) << 4, (pos / B_WIDTH << 4));
 }
 
 /* initBob: Construct new Bob with initial state and add to list */
@@ -130,7 +130,7 @@ VOID moveBob(struct bobData *bd, WORD posX, WORD posY)
 VOID clearTiles(struct screenData *sd, struct RastPort *rp, WORD x, WORD y, board *board, WORD *offsets, WORD *n)
 {
     WORD tx = x >> 4, ty = y >> 4;
-    WORD offset = (ty * WIDTH) + tx;
+    WORD offset = (ty * B_WIDTH) + tx;
     tile *tile = (struct sTile *)board->board + offset;
 
     if (!tile->flag)
@@ -142,7 +142,7 @@ VOID clearTiles(struct screenData *sd, struct RastPort *rp, WORD x, WORD y, boar
 
     tx = (x + 15) >> 4;
     ty = (y + 15) >> 4;
-    offset = (ty * WIDTH) + tx;
+    offset = (ty * B_WIDTH) + tx;
     tile = (struct sTile *)board->board + offset;
 
     if (!tile->flag)
@@ -167,7 +167,7 @@ VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenDa
         if (bd->update[frame])
         {
             clearTiles(sd, rp, bd->prev[frame].posX, bd->prev[frame].posY, board, offsets, &n);
-            clearTiles(sd, rp, bd->state.posX, bd->state.posY, board, offsets, &n);
+            /* clearTiles(sd, rp, bd->state.posX, bd->state.posY, board, offsets, &n); */
         }
     }
 

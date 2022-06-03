@@ -12,10 +12,7 @@
 
 #include <exec/types.h>
 
-#define WIDTH 20
-#define HEIGHT 16
-
-enum ID
+enum
 {
     GID_SELECT,
     GID_BOARD,
@@ -59,7 +56,7 @@ struct editData
     BOOL paint;
     WORD cursX, cursY;
     struct windowData *wd;
-    board *board; /* Array of tiles */
+    struct sBoard *board; /* Array of tiles */
     struct screenData *screen;
 };
 

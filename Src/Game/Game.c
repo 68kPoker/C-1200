@@ -210,7 +210,7 @@ VOID prepBitMap(board *board, struct RastPort *rp, struct screenData *sd)
     }
     bltBitMapRastPort(sd->gfx, 240, 0, rp, 0, 0, 64, 16, 0xc0);
     bltBitMapRastPort(sd->gfx, 304, 0, rp, 304, 0, 16, 16, 0xc0);
-    bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, T_COUNT << 4, 16, 0xc0);
+    bltBitMapRastPort(sd->gfx, 0, 0, rp, 64, 0, 320 - 64, 16, 0xc0);
 }
 
 int main(int argc, char **argv)
@@ -237,22 +237,31 @@ int main(int argc, char **argv)
 
             constructBoard(&board);
 
-            io = board.objectid + TID_HERO - 1;
+            io = board.objectData + TID_HERO - 1;
+            
+            io->type = T_HERO;
 
             io->active = TRUE; /* Call animation routine */            
+            io->trig = 0;
         
             /* Setup hero Bob */
-            easyConstructBob(&io->bob, io->gfx, gfxCount[T_HERO], io->offset);            
+            easyConstructBob(&io->bob, board.gfx, gfxCount[T_HERO], io->offset);            
             AddTail(&sd.bobs, &io->bob.node);
 
             io = board.objectData + TID_ACTIVE_BOX - 1;
             io->bob.active = FALSE; /* Do not draw */
+            
+            io->type = T_BOX;
+            io->trig = 0;
 
             io->active = TRUE; /* Call animation routine */
+            
             AddTail(&sd.bobs, &io->bob.node);
             
             if (prepGUI(&sd, &bwd, &board))
             {
+                D(bug("$%x\n", &board.objectData[TID_HERO - 1]));
+            
                 eventLoop(&sd, &bwd.wd, &board);
                 cleanGUI(&bwd);
             }        

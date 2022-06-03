@@ -10,8 +10,6 @@
 #include <exec/types.h>
 #include <exec/nodes.h>
 
-#include "Board.h"
-
 #define MAX_BOBS    10
 
 #if 0
@@ -40,13 +38,11 @@ struct bobData
 VOID constructBob(struct bobData *bd, struct BitMap *gfx, WORD gfxX, WORD gfxY, WORD posX, WORD posY);
 VOID easyConstructBob(struct bobData *bd, struct BitMap *gfx, WORD gfx, WORD pos);
 
-VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, board *board);
-VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, board *board);
-VOID animateBob(struct bobData *bd, struct screenData *sd, board *board);
+VOID clearBG(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, struct sBoard *board);
+VOID drawBobs(struct List *list, struct RastPort *rp, WORD frame, struct screenData *sd, struct sBoard *board);
+VOID animateBob(struct bobData *bd, struct screenData *sd, struct sBoard *board);
 
-VOID drawTile(struct screenData *sd, tile *tile, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly);
+VOID drawTile(struct screenData *sd, struct sTile *tile, struct RastPort *rp, WORD xpos, WORD ypos, BOOL floorOnly);
 VOID drawFrame(struct RastPort *rp, WORD x, WORD y);
-
-VOID animateHero(struct bobData *bd);
 
 #endif /* BOBS_H */

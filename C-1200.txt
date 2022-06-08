@@ -1,0 +1,48 @@
+
+Obiekty w grze:
+
+Wejście - obsługa klawiatury, myszy, joysticka, klatki animacji itp.
+
+Główny element obsługi wejścia to aktywny gadżet.
+
+Wszystkie okienka otrzymują wiadomość o nowej klatce animacji. Mogą zaktualizować wygląd, położenie swoich elementów graficznych.
+
+Gadżet interpretuje wydarzenia.
+
+Mechanizm gry opiera się na aktualizacji obiektów znajdujących się na planszy. Stan obiektów może ulec zmianie jako reakcja na wydarzenie. W razie potrzeby obiekty są aktualizowane przy najbliższym odrysowywaniu.
+
+Obiekty są przechowywane na liście. Tablica przechowuje typy podłóg.
+
+-----------------------------------------------------------------------------------------------
+
+Przebieg obsługi wejścia:
+
+1. Program czeka na dowolne wydarzenie,
+
+2. Na wypadek możliwości rysowania, program wysyła wiadomość do okienek z prośbą o aktualizację ikonek i obiektów animowanych. Okienka brane są z listy okien,
+
+3. Na wypadek klatki animacji, program ładuje nową grafikę i wykonuje mechanizm animacji gry,
+
+4. W przypadku wydarzeń okresowych timer.device, program wykonuje odpowiedni mechanizm gry,
+
+5. Na wypadek innych wydarzeń program wysyła je do aktywnego gadżetu. Jeżeli nie ma aktywnego gadżetu, program sprawdza, czy nie został aktywowany jakiś gadżet.
+
+-----------------------------------------------------------------------------------------------
+
+Gadżety dzielą sie na kilka rodzajów. Różnią się mechanizmem obsługi.
+
+Przykładowo zwykły przycisk:
+
+1. W przypadku najechania myszy nad przycisk, podświetla go,
+
+2. W przypadku przemieszczenia myszy poza podświetlony przycisk, deaktywuje go,
+
+3. W przypadku naciśnięcia przycisku myszy na podświetlony przycisk, wykonuje jego akcję.
+
+-----------------------------------------------------------------------------------------------
+
+Inny przykład: lista elementów. Implementowana jest ruchomą listą przycisków.
+
+Gadżet posiada dodatkowe atrybuty: wysokość, szczytowy element, liczba elementów.
+
+Rząd elementów: podobnie jak w przypadku listy.

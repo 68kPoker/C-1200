@@ -19,33 +19,42 @@ tile tileTypes[T_COUNT];
 
 WORD gfxCount[T_COUNT];
 
-LONG enterBack(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterWall(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterFloor(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterFlagstone(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterMud(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterSand(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterHero(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterBox(struct sBoard *bp, struct sTile *src, WORD dir);
-LONG enterSandBox(struct sBoard *bp, struct sTile *src, WORD dir);
+LONG actionBack(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionWall(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionFloor(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionFlagstone(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionMud(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionSand(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionHero(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionBox(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
+LONG actionSandBox(struct sBoard *bp, struct sTile *src, WORD dir, WORD action);
 
 LONG animateMud(struct sBoard *bp, struct sTile *tile);
 LONG animateHero(struct sBoard *bp, struct sTile *tile);
 LONG animateBox(struct sBoard *bp, struct sTile *tile);
 LONG animateSandBox(struct sBoard *bp, struct sTile *tile);
 
-LONG (*enterTile[T_COUNT])(struct sBoard *bp, struct sTile *src, WORD dir) =
+enum /* Actions */
+{
+    KNOCK, /* Check movement */
+    MOVE, /* Move object */
+    LEAVE, /* Leave tile */
+    ENTER, /* Enter tile */
+    ENTERED /* Movement done */
+};
+
+LONG (*actionTile[T_COUNT])(struct sBoard *bp, struct sTile *src, WORD dir, WORD action) =
 {
     NULL,
-    enterBack,
-    enterWall,
-    enterFloor,
-    enterBox,
-    enterFlagstone,
-    enterSand,
-    enterSandBox,
-    enterMud,
-    enterHero
+    actionBack,
+    actionWall,
+    actionFloor,
+    actionBox,
+    actionFlagstone,
+    actionSand,
+    actionSandBox,
+    actionMud,
+    actionHero
 };
 
 LONG (*animateTile[T_COUNT])(struct sBoard *bp, struct sTile *tile) = 
@@ -144,6 +153,8 @@ void removeObject(tile *op)
     {
         op->type = op->floor;
         op->typeID = op->floorID;
+
+        op->floor = T_NONE;
     }
 }
 
@@ -151,29 +162,39 @@ void removeObject(tile *op)
 short moveObject(struct sBoard *bp, struct sTile *op, int dir)
 {
     struct sTile *destp = op + dir;
-    struct sIdentifiedObject *io = bp->objectData + op->typeID - 1;
-    
+ 
+    /* Check if movement is possible */
+    if (actionTile[destp->type](bp, op, dir, KNOCK))
+    {
+        actionTile[op->floor](bp, op, dir, LEAVE);
+        actionTile[op->type](bp, op, dir, MOVE);
+        actionTile[destp->floor](bp, op, dir, ENTER);
+
+        replaceObject(destp, op->type, op->typeID);
+        removeObject(op);
+
+        if (destp->typeID > 0)
+        {
+            struct sIdentifiedObject *io = bp->objectData + destp->typeID - 1;
+
+            /* Set move info */ 
+            io->offset += dir;
+            io->pos = 16;
+            io->dir = dir;
+            io->speed = 1;
+            io->active = TRUE;  
+        }
+        return(1);
+    }
+    return(0);
+}
+
+
     if (op->type == T_BOX || op->type == T_SANDBOX)
     {
-        /* Mark as active box */        
 
-        op->typeID = TID_ACTIVE_BOX;
-        io = &bp->objectData[TID_ACTIVE_BOX - 1];        
-        
-        io->offset = (short)((tile *)op - bp->board); /* Box offset */
-        
-        easyConstructBob(&io->bob, bp->gfx, gfxCount[op->type], io->offset);
     }    
 
-    replaceObject(destp, op->type, op->typeID);
-    removeObject(op);
-
-    /* Set move info */ 
-    io->offset += dir; /* Note */
-    io->pos = 16;
-    io->dir = dir;
-    io->speed = 1;
-    io->active = TRUE;  
     
     return(1);
 }
@@ -267,94 +288,156 @@ VOID animateObject(board *bp, identifiedObject *io)
             case  Down:   bd->state.posY += io->speed; break;
             case  Up:     bd->state.posY -= io->speed; break;
         }
+        if (io->pos == 0)
+        {
+            /* Movement done */
+            actionTile[(tile *)bp->board + io->offset](bp, (tile *)bp->board + io->offset, io->dir, ENTERED);
+        }
     }    
 }
 
-LONG enterBack(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionBack(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
-    return(FALSE);
+    if (action == KNOCK)
+    {    
+        return(FALSE);
+    }
 }
 
-LONG enterWall(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionWall(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
-    return(FALSE);
+    if (action == KNOCK)
+    {
+        return(FALSE);
+    }
 }
 
-LONG enterFloor(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionFloor(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
-    moveObject(bp, src, dir);
-    return(TRUE);
+    if (action == KNOCK)
+    {
+        return(TRUE);
+    }
 }
 
-LONG enterFlagstone(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionFlagstone(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
     struct sTile *dest = src + dir;
 
-    if (src->type == T_BOX)
+    if (action == KNOCK)
     {
-        if (src->floor != T_FLAGSTONE)
-        {
-            bp->placed++;
-        }
-    }
-    moveObject(bp, src, dir);
-    return(TRUE);
-}
-
-LONG enterMud(struct sBoard *bp, struct sTile *src, WORD dir)
-{
-    if (src->type == T_SANDBOX)
-    {
-        /* TODO: Change floor to sand, remove sandbox */
-        moveObject(bp, src, dir);
-      
         return(TRUE);
     }
-
-    return(FALSE);
+    else if (action == ENTER)
+    {
+        /* Enter flagstone */
+        if (src->type == T_BOX)
+        {  
+            bp->placed++;
+        }            
+    }
+    else if (action == LEAVE)
+    {
+        /* Leave flagstone */
+        if (src->type == T_BOX)
+        {
+            bp->placed--;
+        }
+    }
 }
 
-LONG enterSand(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionMud(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
-    moveObject(bp, src, dir);
-    return(TRUE);
+    if (action == KNOCK)
+    {
+        if (src->type != T_SANDBOX)
+        {
+            return(FALSE);
+        }
+        return(TRUE);
+    }
+    else if (action == ENTERED)
+    {
+        /* TODO: Change mud (floor) to sand, remove sandbox */
+    }
 }
 
-LONG enterHero(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionSand(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
-    return(FALSE);
+    if (action == KNOCK)
+    {
+        return(TRUE);
+    }    
 }
 
-LONG enterBox(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionHero(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
+{
+    if (action == KNOCK)
+    {    
+        return(FALSE);
+    }
+    else if (action == MOVE)
+    {
+        if ((src + dir)->floor != T_NONE)
+        {
+            /* Push object */
+            moveObject(bp, src + dir, dir);
+        }
+    }
+}
+
+LONG actionBox(struct sBoard *bp, struct sTile *src, WORD dir, WORD action)
 {
     struct sTile *dest = src + dir, *next = dest + dir;
 
-    if (src->type == T_HERO)
-    {
-        if (enterTile[next->type](bp, dest, dir))
+    if (action == KNOCK)
+    {        
+        if (src->type == T_HERO)
         {
-            moveObject(bp, src, dir);
-            return(TRUE);
+            return (actionTile[next->type](bp, dest, dir, KNOCK));            
         }
+        return(FALSE);
     }
+    else if (action == MOVE)
+    {
+        /* Mark as active box */        
 
-    return(FALSE);
+        struct identifiedObject *io;
+        
+        src->typeID = TID_ACTIVE_BOX;
+        io = &bp->objectData[TID_ACTIVE_BOX - 1];        
+        
+        io->offset = (short)((tile *)src - bp->board); /* Box offset */
+        
+        easyConstructBob(&io->bob, bp->gfx, gfxCount[src->type], io->offset);        
+    }
 }
 
-LONG enterSandBox(struct sBoard *bp, struct sTile *src, WORD dir)
+LONG actionSandBox(struct sBoard *bp, struct sTile *src, WORD dir)
 {
     struct sTile *dest = src + dir, *next = dest + dir;
 
-    if (src->type == T_HERO)
+    if (action == KNOCK)
     {
-        if (enterTile[next->type](bp, dest, dir))
+        if (src->type == T_HERO)
         {
-            moveObject(bp, src, dir);
-            return(TRUE);
+            return (actionTile[next->type](bp, dest, dir, KNOCK));                                
         }
+        return(FALSE);
     }
+    else if (action == MOVE)
+    {
+        /* Mark as active box */        
 
-    return(FALSE);
+        struct identifiedObject *io;
+        
+        src->typeID = TID_ACTIVE_BOX;
+        io = &bp->objectData[TID_ACTIVE_BOX - 1];        
+        
+        io->offset = (short)((tile *)src - bp->board); /* Box offset */
+        
+        easyConstructBob(&io->bob, bp->gfx, gfxCount[src->type], io->offset);        
+    }
 }
 
 LONG animateMud(struct sBoard *bp, struct sTile *tile)
@@ -384,9 +467,10 @@ LONG animateHero(struct sBoard *bp, struct sTile *tile)
         {
             struct sTile *dest = tile + trig;
             /* Check if movement is possible */
-            enterTile[dest->type](bp, tile, trig);            
-            
-            animateObject(bp, io);
+            if (moveObject(bp, tile, trig))
+            {
+                animateObject(bp, io);
+            }
         }
     }
     else

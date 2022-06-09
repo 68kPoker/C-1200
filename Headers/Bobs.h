@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Bobs
+**
+** Blitter-objects management
 */
 
 #ifndef BOBS_H

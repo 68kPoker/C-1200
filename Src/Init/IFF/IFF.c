@@ -1,8 +1,5 @@
 
-/*
-** GameX engine
-** Src > Init > IFF
-*/
+/* C-1200 Engine Source Code (in C) */
 
 #include <dos/dos.h>
 #include <libraries/iffparse.h>

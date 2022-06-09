@@ -1,8 +1,5 @@
 
-/*
-** GameX engine
-** Src > Init > Screen
-*/
+/* C-1200 Engine Source Code (in C) */
 
 #ifndef SCREEN_H
 #define SCREEN_H

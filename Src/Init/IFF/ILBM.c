@@ -1,8 +1,5 @@
 
-/*
-** GameX engine
-** Src > Init > IFF
-*/
+/* C-1200 Engine Source Code (in C) */
 
 #include <exec/types.h>
 #include <exec/memory.h>

@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Edit
+**
+** Game-editing functions
 */
 
 #include <stdio.h>

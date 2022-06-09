@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Bobs
+**
+** Blitter-Objects handler
 */
 
 #include <stdio.h>

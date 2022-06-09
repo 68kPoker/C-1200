@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > IFF
+**
+** Interchange-File-Format general handler
 */
 
 #include <dos/dos.h>

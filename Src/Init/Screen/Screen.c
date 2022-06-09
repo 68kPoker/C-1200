@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > Screen
+**
+** Screen display handler with double-buffering and copper
 */
 
 #include <intuition/screens.h>

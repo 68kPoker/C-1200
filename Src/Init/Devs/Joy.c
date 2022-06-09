@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > Devs
+**
+** Joystick handler via gameport.device
 */
 
 #include <devices/gameport.h>

@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Bobs
+**
+** Blitter low-level graphics functions
 */
 
 /* Blitter.c - Own Blitter functions */

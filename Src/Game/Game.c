@@ -1,4 +1,11 @@
 
+/*
+** C-1200 engine
+** Src > Game
+**
+** Game main handler
+*/
+
 #include <stdio.h>
 #include "debug.h"
 

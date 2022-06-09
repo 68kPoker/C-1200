@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > Windows
+**
+** Windows and basic gadget handler
 */
 
 #include <intuition/intuition.h>
@@ -14,6 +16,7 @@
 #include "Windows.h"
 #include "Screen.h"
 
+/* Prepare plain boolean gadget with no imagery */
 BOOL initGadget(struct gadgetData *gd, struct gadgetData *prev, WORD left, WORD top, WORD width, WORD height, WORD ID, VOID (*handle)(struct gadgetData *gd, struct IntuiMessage *msg))
 {
     struct Gadget *gad;

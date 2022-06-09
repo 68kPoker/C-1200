@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Events
+**
+** Signal handling loop
 */
 
 #include <stdio.h>

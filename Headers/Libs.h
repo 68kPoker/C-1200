@@ -1,6 +1,6 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > Libs
 */
 

@@ -1,7 +1,9 @@
 
 /*
-** GameX engine
+** C-1200 engine
 ** Src > Init > IFF
+**
+** Interleaved-BitMap handler
 */
 
 #include <exec/types.h>
@@ -139,6 +141,23 @@ BOOL unpackRow(BYTE **pSrc, BYTE *dest, LONG *pSize, WORD bpr, UBYTE cmp)
     return(TRUE);
 }
 
+VOID initMask(struct BitMap *bm, PLANEPTR mask, WORD width, WORD height, WORD depth)
+{
+    /* Generate transparent pixels plane */
+    struct BitMap aux;
+    WORD i;
+
+    BltClear(mask, RASSIZE(width, height), 0);
+
+    InitBitMap(&aux, depth, width, height);    
+    for (i = 0; i < depth; i++)
+    {
+        aux.Planes[i] = mask;
+    }
+
+    BltBitMap(bm, 0, 0, &aux, 0, 0, width, height, ABC|ABNC|ANBC, 0xff, NULL);
+}
+
 struct BitMap *unpackBitMap(struct IFFHandle *iff, PLANEPTR *mask)
 {
     struct BitMap *bm;
@@ -151,67 +170,63 @@ struct BitMap *unpackBitMap(struct IFFHandle *iff, PLANEPTR *mask)
         UBYTE cmp = bmhd->bmh_Compression;
         WORD bpr = RowBytes(width);
 
-        if (bmhd->bmh_Masking == mskHasMask)
-        {            
-            *mask = AllocVec(RASSIZE(width, height), MEMF_CHIP);
-        }
-        else
+        if (*mask = AllocVec(RASSIZE(width, height), MEMF_CHIP))
         {
-        	*mask = NULL;
-        }	
-
-        if (bm = AllocBitMap(width, height, bmhd->bmh_Depth, BMF_INTERLEAVED, NULL))
-        {
-            BYTE *buffer;
-            LONG size;
-
-            if (buffer = getChunkBuffer(iff, &size))
+            if (bm = AllocBitMap(width, height, bmhd->bmh_Depth, BMF_INTERLEAVED, NULL))
             {
-                WORD row, plane;
-                PLANEPTR planes[8 + 1], maskPtr = *mask;
-                BYTE *curBuf = buffer;
-                LONG curSize = size;
-                BOOL success = FALSE;
+                BYTE *buffer;
+                LONG size;
 
-                for (plane = 0; plane < depth; plane++)
+                if (buffer = getChunkBuffer(iff, &size))
                 {
-                    planes[plane] = bm->Planes[plane];
-                }
-                
-                for (row = 0; row < height; row++)
-                {
+                    WORD row, plane;
+                    PLANEPTR planes[8 + 1], maskPtr = *mask;
+                    BYTE *curBuf = buffer;
+                    LONG curSize = size;
+                    BOOL success = FALSE;
+
                     for (plane = 0; plane < depth; plane++)
                     {
-                        if (!(success = unpackRow(&curBuf, planes[plane], &curSize, bpr, cmp)))
+                        planes[plane] = bm->Planes[plane];
+                    }
+                    
+                    for (row = 0; row < height; row++)
+                    {
+                        for (plane = 0; plane < depth; plane++)
+                        {
+                            if (!(success = unpackRow(&curBuf, planes[plane], &curSize, bpr, cmp)))
+                            {
+                                break;
+                            }
+                            planes[plane] += bm->BytesPerRow;
+                        }
+                        if (!success)
                         {
                             break;
                         }
-                        planes[plane] += bm->BytesPerRow;
+                        if (bmhd->bmh_Masking == mskHasMask)
+                        {
+                            if (!(success = unpackRow(&curBuf, maskPtr, &curSize, bpr, cmp)))
+                            {
+                                break;
+                            }
+                            maskPtr += bpr;
+                        }    
                     }
-                    if (!success)
+                    FreeMem(buffer, size);
+                    if (success)
                     {
-                        break;
+                        if (bmhd->bmh_Masking != mskHasMask)
+                        {
+                            /* Generate mask */
+                            initMask(bm, *mask, width, height, depth);
+                        }
+                        return(bm);
                     }
-                    if (maskPtr)
-                    {
-	                    if (!(success = unpackRow(&curBuf, maskPtr, &curSize, bpr, cmp)))
-    	                {
-        	            	break;
-            	        }
-            	        maskPtr += bpr;
-            	    }    
                 }
-                FreeMem(buffer, size);
-                if (success)
-                {
-                    return(bm);
-                }
+                FreeBitMap(bm);
             }
-            FreeBitMap(bm);
-        }
-        if (*mask)
-        {
-        	FreeVec(mask);
+    	    FreeVec(*mask);
         }	
     }
     return(NULL);

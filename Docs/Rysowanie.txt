@@ -1,0 +1,63 @@
+
+Rysowanie i animacja przebiega w kilku fazach.
+
+1. Najpierw ustalana jest maska A pikseli tła, które w tej klatce animacji się zmienią.
+
+2. Następnie ustalana jest maska B pikseli obiektów w nowych pozycjach (stara maska to C).
+
+3. Wyliczana jest różnica między starą i nową maską: C\B.
+
+4. Teraz tło A jest zmieniane w A\B, tło jest zapamiętywane w AB oraz (~A)(B\C), po czym tło jest odtwarzane w (C\B)\A.
+
+5. Na koniec nowa grafika obiektów jest rysowana w B.
+
+Zbiór A oznacza zbiór pikseli tła, które ulegną zmianie.
+Zbiór B oznacza zbiór pikseli obiektów, które ulegną zmianie, ale nie były ostatnio zmieniane.
+Zbiór C oznacza zbiór pikseli obiektów, które były ostatnio zmieniane, ale nie ulegną zmianie.
+
+Zauważmy, że BC = 0.
+
+Na początek wprowadzamy nowe zmiany tła. Wprowadzamy je w A\B.
+
+Następnie zapamiętujemy tło:
+- Nowe zmiany tła idą do zbioru AB.
+- Stare zmiany tła idą do zbioru aB.
+
+Następnie tło jest odtwarzane w C\A.
+
+Na koniec rysujemy obiekty w nowe miejsca.
+
+Przykład:
+
+A:  t...t... (nowe tło)
+    .t...t..
+    ..t...t.
+    ...t...t
+
+B:  nnnnnnnn (nowy obiekt)
+    n......n
+    n......n
+    nnnnnnnn
+
+C:  ..s..s.. (stary obiekt)
+    ..s..s..
+    ..s..s..
+    ..s..s..
+
+C\B:........ (różnica między starym i nowym)
+    ..r..r..
+    ..r..r..
+    ........
+
+A\B:........ (tło zmieniamy)
+    .t...t..
+    ..t...t.
+    ........
+    
+(C\B)\A: (gdzie odtwarzamy tło)
+    ........
+    ..o.....
+    .....o..
+    ........
+
+Rysujemy obiekt w B.

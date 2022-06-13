@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\author{Robert Szacki}
+\title{Game for Amiga OS - Sokoban clone with advanced GUI}
+\begin{document}
+\maketitle
+\section{OS Init}
+
+Some initiation must be performed at first place. These are shared Amiga libraries and devices.
+
+\section{Data}
+
+All data are loaded from Interchange File Format files. This includes text, graphics, sounds and music. Game data is stored in own chunks.
+
+The graphics is used to decide about screen palette.
+
+\section{Screen}
+
+\subsection{Single or double buffering?}
+
+We will use single buffering as it's easier to maintain, especially with intuition gadgets. But we will use
+additional buffer to draw intermediate objects and then draw all differences on the screen.
+
+\subsection{Animation frames}
+
+Animation frames will be handled with VBlank or Copper interrupt. The main loop will send signals to windows
+about the new animation frame, so they can update their graphics.
+
+\section{Windows}
+
+\subsection{Dragging}
+
+For windows dragging we will use custom handler executed upon every vertical blank or Copper interrupt. This handler
+draws the drag-border on window's MouseX and MouseY position.
+
+\begin{enumerate}
+\item If the drag-bar is hit with LMB, save the window border graphics and mouse position then draw drag-border.
+\item Every VBlank/Copper interrupt if mouse position has changed, restore graphics, save it and draw in new
+ position.
+\item Once released, the window border is restored and the window is moved to new position.
+\end{enumerate}
+
+Data will be saved in Screen's UserData.
+
+The prefered method for saving graphics will be ReadPixel() for vertical and ReadPixelLine8() for horizontal 
+border and store it in pixel array. Then optional mapping and WritePixelLine8().
+
+\subsection{Moving}
+
+For windows movement using custom rendering we will use opening of the window in new position, closing the window 
+in previous position and restoring graphics directly using layers.
+
+\section{Gadgets}
+
+We will use standard intuition and BOOPSI gadgets with custom imagery. Some of the gadget types need to be designed.
+
+\subsection{Buttons}
+
+Buttons will be implemented with intuition boolean gadgets with custom imagery. The imagery will be drawn manually or by BOOPSI image class, so we can provide support for interleaved bitmaps.
+
+\subsection{List view gadget}
+
+The ,,list view'' gadget will be simply a gadget containing a list of sub-gadgets of any kind in a scrollable area.
+
+We need to store Top, Visible and Total values (we can use proportional gadget). Then we can detect the selected gadget based on Top, and send all signals to it.
+
+\section{Graphics}
+
+The graphics will be drawn preferably with Blitter directly or custom chunky-to-planar routine.
+
+Aligned blits will be accelerated.
+
+\subsection{Tiles}
+
+Tiles will be used preferably with aligned blits. Additionally there are single and dual-layer tiles.
+
+\subsection{Blitter Objects}
+
+Bobs will be drawn with cookie-cut operation. The background graphics will be stored in special buffer.
+
+The draw operation on active Bobs is executed in following order:
+\begin{enumerate}
+\item \label{restore_Back} The background under the Bobs is restored.
+\item \label{draw_Back} The new background is drawn.
+\item The background is saved.
+\item \label{draw_Bobs} The Bobs are drawn.
+\end{enumerate}
+To remove a Bob, after phase \ref{restore_Back}. the rest is skipped. To put Bob in a drawing area, once drawn - the Bob is deactivated.
+
+The phase \ref{draw_Back}. can be drawn throguh Stencil if we wish to preserve some foreground objects that are not actively moved in the display.
+
+\end{document}

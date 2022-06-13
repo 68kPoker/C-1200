@@ -54,7 +54,15 @@ WORD setupScreen(struct screenData *sd, struct gfxData *gd)
         {            
             if (openScreen(sd, "Magazyn", LORES_KEY, &dclip, gd->pal, &ta))
             {
-                return(TRUE);
+                if (addCop(sd, "Magazyn", 0, 0, NULL))
+                {
+                    if (addDBuf(sd))
+                    {
+                        return(TRUE);
+                    }
+                    remCop(sd);
+                }
+                closeScreen(sd);
             }
             FreeBitMap(sd->bm[1]);
         }

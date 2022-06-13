@@ -1,7 +1,11 @@
 
 /* Operating system data */
 
+#include <exec/types.h>
+
+#include "ScreenData.h"
+
 struct systemData
 {
-    int i;
+    struct screenData screen;
 };

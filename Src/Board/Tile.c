@@ -1,50 +1,22 @@
 
-#include <exec/memory.h>
-#include <clib/exec_protos.h>
-
+#include "TileData.h"
 #include "Tile.h"
 
-void init();
-struct Tile *alloc();
-void clear(struct Tile *t);
-
-struct tileAPI tile = { init };
-
-static void init()
+long replaceFloor( int floorType, int floorID, struct floorData *fd, struct tileData *td, struct boardData *bd, struct gameData *gd, struct programData *pd )
 {
-    init.alloc = alloc;
-    init.clear = clear;
+    fd->type = floorType;
+    fd->ID = floorID;
+    return(0);
 }
 
-static struct Tile *alloc()
+long replaceObject( int objectType, int objectID, struct objectData *od, struct tileData *td, struct boardData *bd, struct gameData *gd, struct programData *pd )
 {
-    struct Tile *t;
-
-    if (t = AllocVec(COLS * ROWS * sizeof(*t)))
-    {
-        tile.clear(t);
-        return(t);
-    }
-    return(NULL);
+    od->type = objectType;
+    od->ID = objectID;
+    return(0);
 }
 
-static void clear(struct Tile *t)
+long tile( struct tileData *td, struct boardData *bd, struct gameData *gd, struct programData *pd )
 {
-    WORD i, j;
-    struct Tile floor = { { FLOOR }, { NONE } }, wall = { { WALL }, { NONE } };
-
-    for (i = 0; i < ROWS; i++)
-    {
-        for (j = 0; j < COLS; j++)
-        {
-            if (i == 0 || i == ROWS - 1 || j == 0 || j == COLS - 1)
-            {
-                *t++ = wall;
-            }
-            else
-            {
-                *t++ = floor;
-            }
-        }
-    }
+    return(0);
 }

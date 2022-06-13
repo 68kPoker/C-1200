@@ -31,14 +31,14 @@ __saveds __asm ULONG myCop(register __a1 struct copperData *cd)
     return(0);
 }
 
-BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectangle *dclip, struct BitMap *bm[], ULONG *pal, struct TextAttr *ta)
+BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectangle *dclip, ULONG *pal, struct TextAttr *ta)
 {
     if (sd->font = OpenDiskFont(ta))
     {
         if (sd->s = OpenScreenTags(NULL,
             SA_DisplayID,   modeID,
             SA_DClip,       dclip,
-            SA_BitMap,      bm[0],
+            SA_BitMap,      sd->bm[0],
             SA_Colors32,    pal,
             SA_Title,       title,
             SA_Font,        ta,
@@ -47,10 +47,7 @@ BOOL openScreen(struct screenData *sd, STRPTR title, ULONG modeID, struct Rectan
             SA_Exclusive,   TRUE,
             SA_BackFill,    LAYERS_NOBACKFILL,
             TAG_DONE))
-        {
-            sd->bm[0] = bm[0];
-            sd->bm[1] = bm[1];
-            
+        {                        
             sd->s->UserData = (APTR)sd;
             return(TRUE);
         }

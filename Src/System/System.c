@@ -18,6 +18,12 @@ struct TextAttr ta =
     FPF_DISKFONT|FPF_DESIGNED    
 };
 
+void freeBitMap(struct BitMap *bm, PLANEPTR mask)
+{
+    FreeBitMap(bm);
+    FreeVec(mask);
+}
+
 long resetSystem(struct systemData *sd, struct programData *pd)
 {
     /* Reset system components (libs, devs, screen etc.) */
@@ -46,10 +52,20 @@ long resetSystem(struct systemData *sd, struct programData *pd)
                                     if (addDBuf(screen))
                                     {
                                         if (screen->joyIO = openJoy(&screen->joyIE))
-                                        {                                            
-                                            FreeVec(pal);
-                                            closeIFF(iff);
-                                            return(TRUE);
+                                        {    
+                                            if (openWindow(&screen->wd, screen,
+                                                WA_Left,    0,
+                                                WA_Top,     0,
+                                                WA_Width,   screen->s->Width,
+                                                WA_Height,  screen->s->Height,
+                                                WA_IDCMP,   MAIN_IDCMP_FLAGS,
+                                                TAG_DONE))
+                                            {                                        
+                                                FreeVec(pal);
+                                                closeIFF(iff);
+                                                return(TRUE);
+                                            }
+                                            closeJoy(screen->joyIO);
                                         }
                                         freeDBuf(screen);
                                     }
@@ -61,7 +77,7 @@ long resetSystem(struct systemData *sd, struct programData *pd)
                         }
                         FreeBitMap(screen->bm[0]);
                     }
-                    FreeBitMap(screen->gfx); /* Remember: free mask also! */
+                    freeBitMap(screen->gfx, screen->mask); /* Remember: free mask also! */
                 }
                 FreeVec(pal);
             }
@@ -75,11 +91,12 @@ void freeSystem(struct systemData *sd, struct programData *pd)
 {
     struct screenData *screen = &sd->screen;
 
+    closeWindow(&screen->wd);
     closeJoy(screen->joyIO);
     freeDBuf(screen);
     remCop(screen);
     closeScreen(screen);
     FreeBitMap(screen->bm[1]);
     FreeBitMap(screen->bm[0]);
-    FreeBitMap(screen->gfx);
+    freeBitMap(screen->gfx, screen->mask);
 }

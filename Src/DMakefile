@@ -1,7 +1,20 @@
 
-src = Game/Game.c Init/Libs/Libs.c Init/IFF/IFF.c Init/IFF/ILBM.c \
-	Init/Screen/Screen.c Init/Windows/Windows.c Init/Devs/Joy.c \
-	Edit/Edit.c Bobs/Bobs.c Events/Loop.c Bobs/Blitter.c Board/Board.c
+src =	Game/Game.c \
+		Libs/Libs.c \
+		IFF/IFF.c IFF/ILBM.c \
+		Screen/Screen.c \
+		Window/Window.c \
+		Gadget/Gadget.c \
+		Devs/Joy.c \
+		Editor/Editor.c \
+		Bob/Bob.c \
+		Events/Loop.c \
+		Bob/Blitter.c \
+		Board/Board.c \
+		Program/Program.c \
+		Board/Board.c Board/Tile.c \
+		Main/Main.c \
+		System/System.c
 
 inc = /Headers/
 
@@ -17,26 +30,28 @@ $(obj): $(src)
 
 # Headers
 
-Game/Game.o: $(inc)Game.h $(inc)IFF.h $(inc)ILBM.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h $(inc)Windows.h $(inc)Edit.h $(inc)Loop.h $(inc)Blitter.h
+Program/Program.o Game/Game.o System/System.o Board/Board.o :: \
+	$(inc)ProgramData.h $(inc)GameData.h $(inc)SystemData.h $(inc)EditorData.h $(inc)BoardData.h \
+	$(inc)Program.h $(inc)Game.h $(inc)System.h $(inc)Editor.h $(inc)Board.h
 
-Init/Libs/Libs.o: $(inc)Libs.h
+System/System.o: $(inc)Joy.h $(inc)IFF.h $(inc)ILBM.h 
 
-Init/IFF/IFF.o: $(inc)IFF.h
+Main/Main.o Libs/Libs.o: $(inc)Libs.h
 
-Init/IFF/ILBM.o: $(inc)IFF.h $(inc)ILBM.h
+IFF/IFF.o: $(inc)IFF.h
 
-Init/Screen/Screen.o: $(inc)Screen.h
+IFF/ILBM.o: $(inc)IFF.h $(inc)ILBM.h
 
-Init/Windows/Windows.o: $(inc)Windows.h
+Screen/Screen.o: $(inc)ScreenData.h $(inc)Screen.h
 
-Init/Devs/Joy.o: $(inc)Joy.h
+Window/Window.o: $(inc)WindowData.h $(inc)Window.h
 
-Edit/Edit.o: $(inc)Edit.h $(inc)Windows.h $(inc)Blitter.h $(inc)Bobs.h $(inc)IFF.h
+Devs/Joy.o: $(inc)Joy.h
 
-Bobs/Bobs.o: $(inc)Bobs.h $(inc)Blitter.h $(inc)Screen.h
+Bob/Bob.o: $(inc)BobData.h $(inc)Bob.h $(inc)Blitter.h
 
-Events/Loop.o: $(inc)Loop.h $(inc)Windows.h $(inc)Screen.h $(inc)Joy.h $(inc)Bobs.h
+Events/Loop.o: $(inc)Loop.h $(inc)WindowData.h $(inc)ScreenData.h
 
 Bobs/Blitter.o: $(inc)Blitter.h
 
-Board/Board.o: $(inc)Board.h
+Board/Board.o Board/Tile.o: $(inc)BoardData.h $(inc)Board.h $(inc)TileData.h $(inc)Tile.h

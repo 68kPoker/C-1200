@@ -3,7 +3,7 @@
 #include <devices/inputevent.h>
 #include <graphics/gfx.h>
 
-#include "Bobs.h"
+#include "WindowData.h"
 
 struct copperData
 {
@@ -25,13 +25,10 @@ struct screenData
     struct Interrupt is;
     struct copperData cd;
 
-    struct windowData *wd; /* Pointer to main window */
+    struct windowData wd; /* Main window */
     struct BitMap *gfx;
+    PLANEPTR mask;
 
     struct IOStdReq *joyIO;
     struct InputEvent joyIE;
-
-    struct List bobs; /* Bobs list */
-    
-    PLANEPTR mask;
 };

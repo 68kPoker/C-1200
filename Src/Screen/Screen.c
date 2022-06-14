@@ -18,6 +18,7 @@
 #include <clib/graphics_protos.h>
 #include <clib/intuition_protos.h>
 
+#include "ScreenData.h"
 #include "Screen.h"
 
 __far extern struct Custom custom;

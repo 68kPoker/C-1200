@@ -1,0 +1,5 @@
+
+struct editorData
+{
+    int x;
+};

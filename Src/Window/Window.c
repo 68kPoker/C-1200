@@ -13,9 +13,8 @@
 #include <clib/intuition_protos.h>
 #include <clib/utility_protos.h>
 
-#include "WindowData.h"
 #include "Window.h"
-#include "ScreenData.h"
+#include "Screen.h"
 
 BOOL openWindow(struct windowData *wd, struct screenData *sd, ULONG tag1, ...)
 {

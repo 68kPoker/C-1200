@@ -6,3 +6,5 @@
 *.zip
 Fonts
 Docs/build
+*.tex
+.vscode

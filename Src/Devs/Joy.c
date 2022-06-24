@@ -1,6 +1,6 @@
 
 /*
-** C-1200 engine
+** GameC engine
 ** Src > Init > Devs
 **
 ** Joystick handler via gameport.device

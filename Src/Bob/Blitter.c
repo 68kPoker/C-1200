@@ -1,12 +1,8 @@
 
 /*
-** C-1200 engine
-** Src > Bobs
-**
-** Blitter low-level graphics functions
+** GameC engine
+** Blitter
 */
-
-/* Blitter.c - Own Blitter functions */
 
 #include <stdio.h>
 #include <assert.h>
@@ -18,6 +14,10 @@
 #include <clib/graphics_protos.h>
 
 #include "Blitter.h"
+
+#ifndef AMIGA
+#define __far
+#endif
 
 __far extern struct Custom custom;
 

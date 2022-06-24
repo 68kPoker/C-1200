@@ -1,5 +1,0 @@
-
-struct editorData
-{
-    int x;
-};

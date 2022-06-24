@@ -1,5 +1,8 @@
 
-/* C-1200 Engine Source Code (in C) */
+/*
+** GameC engine
+** Libs
+*/
 
 #ifndef LIBS_H
 #define LIBS_H

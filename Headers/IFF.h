@@ -1,7 +1,7 @@
 
 /*
-** C-1200 engine
-** Src > Init > IFF
+** GameC engine
+** IFF
 */
 
 #ifndef IFF_H

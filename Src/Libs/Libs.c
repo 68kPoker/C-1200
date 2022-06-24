@@ -1,6 +1,4 @@
 
-/* C-1200 Engine Source Code (in C) */
-
 #include <exec/libraries.h>
 #include <clib/exec_protos.h>
 

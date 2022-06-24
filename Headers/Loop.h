@@ -1,7 +1,7 @@
 
 /*
-** C-1200 engine
-** Src > Events
+** GameC engine
+** Loop
 */
 
 #ifndef LOOP_H

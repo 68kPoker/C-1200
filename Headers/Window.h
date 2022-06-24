@@ -9,6 +9,13 @@
 
 #include <exec/types.h>
 
+struct windowData
+{
+    struct Window *w;
+    struct gadgetData *activeGad;
+    BOOL done;
+};
+
 BOOL openWindow(struct windowData *wd, struct screenData *sd, ULONG tag1, ...);
 VOID closeWindow(struct windowData *wd);
 

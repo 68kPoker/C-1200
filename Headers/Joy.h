@@ -1,7 +1,7 @@
 
 /*
-** C-1200 engine
-** Src > Init > Devs
+** GameC engine
+** Devs
 */
 
 #ifndef JOY_H

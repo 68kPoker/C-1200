@@ -1,21 +1,7 @@
 
-src =	Game/Game.c \
-		Libs/Libs.c \
-		IFF/IFF.c IFF/ILBM.c \
-		Screen/Screen.c \
-		Window/Window.c \
-		Gadget/Gadget.c \
-		Devs/Joy.c \
-		Editor/Editor.c \
-		Bob/Bob.c \
-		Events/Loop.c \
-		Bob/Blitter.c \
-		Board/Board.c \
-		Program/Program.c \
-		Board/Board.c Board/Tile.c \
-		Main/Main.c \
-		System/System.c
-
+src =	Game.c Libs.c IFF.c ILBM.c Screen.c Window.c Joy.c Blitter.c \
+		Board.c
+		
 inc = /Headers/
 
 obj = $(src:*.c:%1.o)
